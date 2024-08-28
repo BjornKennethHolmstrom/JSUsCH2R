@@ -124,8 +124,21 @@ const App = () => {
         )}
       </div>
       <div className="text-center mt-4">
-        <a href="https://bjornkennethholmstrom.wordpress.com/code-jsusch2r/" target="_blank" rel="noopener noreferrer" className="text-sm text-gray-600 hover:text-gray-800">
+        <a 
+          href="https://github.com/bjornkj/JSUsCH2R" 
+          target="_blank" 
+          rel="noopener noreferrer" 
+          className="text-sm text-gray-600 hover:text-gray-800 block"
+        >
           JSUsCH²R Project Homepage
+        </a>
+        <a 
+          href="https://www.paypal.com/donate/?hosted_button_id=FX7FQMDQBAR4N" 
+          target="_blank" 
+          rel="noopener noreferrer" 
+          className="text-sm text-gray-600 hover:text-gray-800 block"
+        >
+          Donate to support
         </a>
       </div>
     </div>

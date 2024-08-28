@@ -27,7 +27,7 @@ const JSUsCH2R = ({ schedule, onEmojiClick }) => {
         by <a href="https://bjornkennethholmstrom.wordpress.com" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800">Björn Kenneth Holmström</a>
       </p>
       <div className="bg-white rounded-lg shadow-lg p-6 max-w-2xl w-full">
-        <p className="text-lg mb-2">JavaScriptUnicodeSymbolClockHourlyHabitRepresentation</p>
+        <p className="text-lg mb-2">JavaScript Unicode Symbol Clock - Hourly Habit Representation</p>
         <p className="text-sm mb-4 italic">This is just an excuse to make a funny acronym.</p>
         <p className="mb-4">Shows Unicode symbols representing human activity</p>
         <div className="text-6xl mb-4">{currentEmoji}</div>
