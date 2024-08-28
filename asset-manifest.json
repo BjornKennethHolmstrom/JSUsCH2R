@@ -1,0 +1,15 @@
+{
+  "files": {
+    "main.css": "/JSUsCH2R.git/static/css/main.a448a8c2.css",
+    "main.js": "/JSUsCH2R.git/static/js/main.52fdab2b.js",
+    "static/js/453.d8923aec.chunk.js": "/JSUsCH2R.git/static/js/453.d8923aec.chunk.js",
+    "index.html": "/JSUsCH2R.git/index.html",
+    "main.a448a8c2.css.map": "/JSUsCH2R.git/static/css/main.a448a8c2.css.map",
+    "main.52fdab2b.js.map": "/JSUsCH2R.git/static/js/main.52fdab2b.js.map",
+    "453.d8923aec.chunk.js.map": "/JSUsCH2R.git/static/js/453.d8923aec.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.a448a8c2.css",
+    "static/js/main.52fdab2b.js"
+  ]
+}
