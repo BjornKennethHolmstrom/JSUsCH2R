@@ -34,7 +34,7 @@ const EmojiLibrary = ({ emojiLibrary, onAddEmoji, onRemoveEmoji, onRestoreDefaul
           type="text"
           value={newEmoji}
           onChange={(e) => setNewEmoji(e.target.value)}
-          className={`border rounded p-2 text-center ${theme.text}`}
+          className={`border rounded p-2 text-center ${theme.input}`}
           maxLength={2}
           placeholder="New emoji"
         />
@@ -42,7 +42,7 @@ const EmojiLibrary = ({ emojiLibrary, onAddEmoji, onRemoveEmoji, onRestoreDefaul
           type="text"
           value={newActivity}
           onChange={(e) => setNewActivity(e.target.value)}
-          className={`border rounded p-2 flex-grow ${theme.text}`}
+          className={`border rounded p-2 flex-grow ${theme.input}`}
           placeholder="Activity description"
         />
       </div>

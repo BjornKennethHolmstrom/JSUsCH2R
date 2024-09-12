@@ -8,6 +8,10 @@ const themes = {
     card: 'bg-white',
     accent: 'bg-yellow-300',
     hover: 'hover:bg-blue-200',
+    input: 'bg-white text-gray-800',
+    emojiBg: 'bg-gray-200',
+    dropdown: 'bg-white text-gray-800',
+    modal: 'bg-white',
   },
   dark: {
     name: 'Dark Mode',
@@ -16,6 +20,10 @@ const themes = {
     card: 'bg-gray-800',
     accent: 'bg-yellow-600',
     hover: 'hover:bg-gray-700',
+    input: 'bg-gray-700 text-gray-200',
+    emojiBg: 'bg-gray-600',
+    dropdown: 'bg-gray-700 text-gray-200',
+    modal: 'bg-gray-800',
   },
   nature: {
     name: 'Nature',
@@ -24,6 +32,7 @@ const themes = {
     card: 'bg-green-100',
     accent: 'bg-lime-300',
     hover: 'hover:bg-green-200',
+    input: 'bg-white text-gray-900',
   },
   sunset: {
     name: 'Sunset',
@@ -32,6 +41,7 @@ const themes = {
     card: 'bg-orange-100',
     accent: 'bg-pink-400',
     hover: 'hover:bg-orange-200',
+    input: 'bg-white text-gray-900',
   },
   ocean: {
     name: 'Ocean',
@@ -40,6 +50,7 @@ const themes = {
     card: 'bg-cyan-100',
     accent: 'bg-blue-400',
     hover: 'hover:bg-cyan-200',
+    input: 'bg-white text-gray-900',
   },
   lavender: {
     name: 'Lavender',
@@ -48,6 +59,7 @@ const themes = {
     card: 'bg-purple-100',
     accent: 'bg-purple-300',
     hover: 'hover:bg-purple-200',
+    input: 'bg-white text-gray-800',
   },
   midnight: {
     name: 'Midnight',
@@ -56,6 +68,10 @@ const themes = {
     card: 'bg-indigo-900',
     accent: 'bg-indigo-400',
     hover: 'hover:bg-indigo-800',
+    input: 'bg-indigo-800 text-gray-200',
+    emojiBg: 'bg-indigo-700',
+    dropdown: 'bg-indigo-800 text-gray-200',
+    modal: 'bg-indigo-900',
   },
   coffee: {
     name: 'Coffee',
@@ -64,6 +80,10 @@ const themes = {
     card: 'bg-amber-900',
     accent: 'bg-amber-600',
     hover: 'hover:bg-amber-800',
+    input: 'bg-amber-800 text-gray-200',
+    emojiBg: 'bg-amber-700',
+    dropdown: 'bg-amber-800 text-gray-200',
+    modal: 'bg-amber-900',
   },
   pastel: {
     name: 'Pastel',
@@ -72,6 +92,7 @@ const themes = {
     card: 'bg-pink-100',
     accent: 'bg-yellow-200',
     hover: 'hover:bg-pink-200',
+    input: 'bg-white text-gray-800',
   },
   grayscale: {
     name: 'Grayscale',
@@ -80,6 +101,7 @@ const themes = {
     card: 'bg-white',
     accent: 'bg-gray-600',
     hover: 'hover:bg-gray-300',
+    input: 'bg-white text-gray-800',
   },
 };
 

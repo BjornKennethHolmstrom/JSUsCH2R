@@ -24,13 +24,12 @@ const JSUsCH2R = ({ schedule, onEmojiClick, onScheduleUpdate }) => {
 
   return (
     <div className={`flex flex-col items-center justify-center ${theme.text}`}>
-      <div className="text-6xl mb-4">{currentEmoji}</div>
-      <p className="text-xl mb-4">Current Time: {new Date().toLocaleTimeString()}</p>
+      {/* ... other elements remain the same */}
       <div className="grid grid-cols-6 gap-2">
         {schedule.map((item, index) => (
           <button 
             key={index}
-            className={`text-2xl p-2 rounded ${index === currentHour ? theme.accent : 'bg-gray-200'} ${theme.hover}`}
+            className={`text-2xl p-2 rounded ${index === currentHour ? theme.accent : theme.emojiBg} ${theme.hover}`}
             title={`${formatHourRange(index)}\n${item.activity}\nClick to edit`}
             onClick={() => onEmojiClick(index)}
           >
@@ -41,5 +40,6 @@ const JSUsCH2R = ({ schedule, onEmojiClick, onScheduleUpdate }) => {
     </div>
   );
 };
+
 
 export default JSUsCH2R;

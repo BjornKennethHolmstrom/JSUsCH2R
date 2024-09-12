@@ -9,7 +9,7 @@ const ThemeSelector = () => {
       <select
         value={Object.keys(themes).find(key => themes[key] === theme)}
         onChange={(e) => setCurrentTheme(e.target.value)}
-        className="p-2 rounded bg-white text-gray-800"
+        className={`p-2 rounded ${theme.dropdown}`}
       >
         {Object.entries(themes).map(([key, themeOption]) => (
           <option key={key} value={key}>

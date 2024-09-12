@@ -64,15 +64,15 @@ const ShareModal = ({ weekSchedule, activeDay, onClose }) => {
           <select
             value={shareMode}
             onChange={(e) => setShareMode(e.target.value)}
-            className={`w-full p-2 border rounded ${theme.text}`}
+            className={`w-full p-2 border rounded ${theme.input}`}
           >
             <option value="day">Current Day</option>
             <option value="week">Entire Week</option>
           </select>
         </div>
 
-        <div ref={scheduleRef} className="bg-white p-4 rounded-lg mb-4">
-          <h3 className="text-lg font-semibold mb-2">My JSUsCH²R {shareMode === 'day' ? 'Day' : 'Week'} Schedule</h3>
+        <div ref={scheduleRef} className={`${theme.card} p-4 rounded-lg mb-4`}>
+          <h3 className={`text-lg font-semibold mb-2 ${theme.text}`}>My JSUsCH²R {shareMode === 'day' ? 'Day' : 'Week'} Schedule</h3>
           {shareMode === 'day' ? (
             <DaySchedule schedule={weekSchedule[activeDay]} />
           ) : (
@@ -83,7 +83,7 @@ const ShareModal = ({ weekSchedule, activeDay, onClose }) => {
         <textarea
           value={shareMessage}
           onChange={(e) => setShareMessage(e.target.value)}
-          className={`w-full p-2 border rounded mb-4 ${theme.text}`}
+          className={`w-full p-2 border rounded mb-4 ${theme.input}`}
           rows="3"
         />
 
