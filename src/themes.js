@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 
 const themes = {
   default: {
@@ -88,7 +88,14 @@ const ThemeContext = createContext();
 export const useTheme = () => useContext(ThemeContext);
 
 export const ThemeProvider = ({ children }) => {
-  const [currentTheme, setCurrentTheme] = useState('dark'); // Changed from 'default' to 'dark'
+  const [currentTheme, setCurrentTheme] = useState(() => {
+    const savedTheme = localStorage.getItem('jsusch2r-theme');
+    return savedTheme && themes[savedTheme] ? savedTheme : 'dark';
+  });
+
+  useEffect(() => {
+    localStorage.setItem('jsusch2r-theme', currentTheme);
+  }, [currentTheme]);
 
   const theme = themes[currentTheme];
 

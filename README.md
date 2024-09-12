@@ -8,7 +8,7 @@ Created by [Björn Kenneth Holmström](https://bjornkennethholmstrom.wordpress.c
 
 ## Features
 
-- 24-hour schedule representation using emojis
+- 24-hour weeklong schedule representation using emojis
 - Customizable emoji library
 - Editable activities for each hour
 - Real-time clock display
@@ -17,6 +17,7 @@ Created by [Björn Kenneth Holmström](https://bjornkennethholmstrom.wordpress.c
 - Time allocation chart
 - PWA and mobile friendly
 - Social sharing of schedule
+- Select week starting day (Monday or Sunday)
 
 ## Getting Started
 

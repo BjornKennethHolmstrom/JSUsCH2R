@@ -5,6 +5,7 @@ import EditPopup from './components/EditPopup';
 import ThemeSelector from './components/ThemeSelector';
 import TimeAllocationAnalysis from './components/TimeAllocationAnalysis';
 import ShareModal from './components/ShareModal';
+import WeeklySchedule from './components/WeeklySchedule';
 import { useTheme } from './themes';
 
 const useLocalStorage = (key, initialValue) => {
@@ -31,7 +32,7 @@ const useLocalStorage = (key, initialValue) => {
   return [storedValue, setValue];
 };
 
-const defaultSchedule = [
+const defaultDaySchedule = [
   { emoji: "😴", activity: "Sleeping" },
   { emoji: "😴", activity: "Sleeping" },
   { emoji: "😴", activity: "Sleeping" },
@@ -39,42 +40,52 @@ const defaultSchedule = [
   { emoji: "😴", activity: "Sleeping" },
   { emoji: "😴", activity: "Sleeping" },
   { emoji: "🧘", activity: "Meditating" },
-  { emoji: "🍵", activity: "Having tea" },
-  { emoji: "🎨", activity: "Creating art" },
-  { emoji: "👔", activity: "Working" },
-  { emoji: "🎮", activity: "Playing games" },
-  { emoji: "🎶", activity: "Listening to music" },
-  { emoji: "🍲", activity: "Eating lunch" },
-  { emoji: "📷", activity: "Taking photos" },
-  { emoji: "👔", activity: "Working" },
-  { emoji: "💻", activity: "Coding" },
-  { emoji: "📝", activity: "Writing" },
-  { emoji: "🥗", activity: "Having dinner" },
-  { emoji: "🚶", activity: "Walking" },
-  { emoji: "💪", activity: "Exercising" },
-  { emoji: "🤗", activity: "Socializing" },
-  { emoji: "📖", activity: "Reading" },
+  { emoji: "🍳", activity: "Breakfast" },
+  { emoji: "🚿", activity: "Getting ready" },
+  { emoji: "💼", activity: "Work" },
+  { emoji: "💼", activity: "Work" },
+  { emoji: "💼", activity: "Work" },
+  { emoji: "🥗", activity: "Lunch" },
+  { emoji: "💼", activity: "Work" },
+  { emoji: "💼", activity: "Work" },
+  { emoji: "🏋️", activity: "Exercise" },
+  { emoji: "🍲", activity: "Dinner" },
+  { emoji: "📚", activity: "Reading" },
+  { emoji: "🎨", activity: "Hobby time" },
+  { emoji: "📺", activity: "Relaxing" },
+  { emoji: "🛁", activity: "Self-care" },
+  { emoji: "📱", activity: "Social media" },
   { emoji: "😴", activity: "Sleeping" },
   { emoji: "😴", activity: "Sleeping" }
 ];
 
+const defaultWeekSchedule = {
+  Mon: defaultDaySchedule,
+  Tue: defaultDaySchedule,
+  Wed: defaultDaySchedule,
+  Thu: defaultDaySchedule,
+  Fri: defaultDaySchedule,
+  Sat: defaultDaySchedule,
+  Sun: defaultDaySchedule,
+};
+
 const defaultEmojiLibrary = [
   { emoji: "😴", activity: "Sleeping" },
   { emoji: "🧘", activity: "Meditating" },
-  { emoji: "🍵", activity: "Having tea" },
-  { emoji: "🎨", activity: "Creating art" },
-  { emoji: "👔", activity: "Working" },
-  { emoji: "🎮", activity: "Playing games" },
-  { emoji: "🎶", activity: "Listening to music" },
-  { emoji: "🍲", activity: "Eating lunch" },
-  { emoji: "📷", activity: "Taking photos" },
+  { emoji: "🍳", activity: "Cooking" },
+  { emoji: "💼", activity: "Working" },
+  { emoji: "🏋️", activity: "Exercising" },
+  { emoji: "📚", activity: "Reading" },
+  { emoji: "🎨", activity: "Creating" },
+  { emoji: "🎮", activity: "Gaming" },
+  { emoji: "🌳", activity: "Nature walk" },
   { emoji: "💻", activity: "Coding" },
-  { emoji: "📝", activity: "Writing" },
-  { emoji: "🥗", activity: "Having dinner" },
-  { emoji: "🚶", activity: "Walking" },
-  { emoji: "💪", activity: "Exercising" },
-  { emoji: "🤗", activity: "Socializing" },
-  { emoji: "📖", activity: "Reading" }
+  { emoji: "🎵", activity: "Music" },
+  { emoji: "✍️", activity: "Writing" },
+  { emoji: "🧹", activity: "Cleaning" },
+  { emoji: "👥", activity: "Socializing" },
+  { emoji: "🚗", activity: "Commuting" },
+  { emoji: "📺", activity: "Watching TV" }
 ];
 
 const decodeString = (str) => {
@@ -84,23 +95,34 @@ const decodeString = (str) => {
 };
 
 const App = () => {
-  const [schedule, setSchedule] = useLocalStorage('jsusch2r-schedule', defaultSchedule);
+  const [weekSchedule, setWeekSchedule] = useLocalStorage('jsusch2r-week-schedule', defaultWeekSchedule);
   const [emojiLibrary, setEmojiLibrary] = useLocalStorage('jsusch2r-emoji-library', defaultEmojiLibrary);
+  const [editingDay, setEditingDay] = useState(null);
   const [editingIndex, setEditingIndex] = useState(null);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  const [weekStart, setWeekStart] = useLocalStorage('jsusch2r-week-start', 'Mon');
+  const [hasSeenTooltip, setHasSeenTooltip] = useLocalStorage('jsusch2r-has-seen-tooltip', false);
 
-  const handleScheduleUpdate = (newSchedule) => {
-    setSchedule(newSchedule);
+  const handleDayScheduleUpdate = (day, newDaySchedule) => {
+    setWeekSchedule(prevWeekSchedule => ({
+      ...prevWeekSchedule,
+      [day]: newDaySchedule
+    }));
   };
 
-  const handleEmojiClick = (index) => {
+  const handleEmojiClick = (day, index) => {
+    setEditingDay(day);
     setEditingIndex(index);
   };
 
   const handleEditSave = (emoji, activity) => {
-    const newSchedule = [...schedule];
-    newSchedule[editingIndex] = { emoji, activity };
-    handleScheduleUpdate(newSchedule);
-    setEditingIndex(null);
+    if (editingDay && editingIndex !== null) {
+      const newDaySchedule = [...weekSchedule[editingDay]];
+      newDaySchedule[editingIndex] = { emoji, activity };
+      handleDayScheduleUpdate(editingDay, newDaySchedule);
+      setEditingDay(null);
+      setEditingIndex(null);
+    }
   };
 
   const handleAddEmoji = (emoji, activity) => {
@@ -113,29 +135,37 @@ const App = () => {
     setEmojiLibrary(emojiLibrary.filter(item => item.emoji !== emoji));
   };
 
-  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
-
-  useEffect(() => {
-    const hash = window.location.hash;
-    if (hash.startsWith('#schedule=')) {
-      const encodedSchedule = hash.replace('#schedule=', '');
-      try {
-        const decodedSchedule = JSON.parse(decodeString(atob(encodedSchedule)));
-        setSchedule(decodedSchedule);
-      } catch (error) {
-        console.error('Error decoding schedule:', error);
-      }
-    }
-  }, []); 
-
   const { theme } = useTheme();
+
+  const toggleWeekStart = () => {
+    setWeekStart(prev => prev === 'Mon' ? 'Sun' : 'Mon');
+  };
+
+  const handleTooltipDismiss = () => {
+    setHasSeenTooltip(true);
+  };
 
   return (
     <div className={`min-h-screen ${theme.background} ${theme.text} p-2 sm:p-4 flex flex-col`}>
       <div className="flex-grow max-w-4xl mx-auto w-full">
         <ThemeSelector />
-        <JSUsCH2R schedule={schedule} onEmojiClick={handleEmojiClick} />
-        <TimeAllocationAnalysis schedule={schedule} />
+        <div className="flex justify-between items-center mb-4">
+          <button
+            onClick={toggleWeekStart}
+            className={`${theme.accent} ${theme.text} px-4 py-2 rounded ${theme.hover}`}
+          >
+            Week starts on: {weekStart}
+          </button>
+        </div>
+        <WeeklySchedule
+          weekSchedule={weekSchedule}
+          onDayScheduleUpdate={handleDayScheduleUpdate}
+          onEmojiClick={handleEmojiClick}
+          weekStart={weekStart}
+          showTooltip={!hasSeenTooltip}
+          onTooltipDismiss={handleTooltipDismiss}
+        />
+        <TimeAllocationAnalysis schedule={Object.values(weekSchedule).flat()} />
         <EmojiLibrary
           emojiLibrary={emojiLibrary}
           onAddEmoji={handleAddEmoji}
@@ -148,18 +178,21 @@ const App = () => {
         >
           Share My Schedule
         </button>
-        {editingIndex !== null && (
+        {editingDay && editingIndex !== null && (
           <EditPopup
-            emoji={schedule[editingIndex].emoji}
-            activity={schedule[editingIndex].activity}
+            emoji={weekSchedule[editingDay][editingIndex].emoji}
+            activity={weekSchedule[editingDay][editingIndex].activity}
             emojiLibrary={emojiLibrary}
             onSave={handleEditSave}
-            onClose={() => setEditingIndex(null)}
+            onClose={() => {
+              setEditingDay(null);
+              setEditingIndex(null);
+            }}
           />
         )}
         {isShareModalOpen && (
           <ShareModal
-            schedule={schedule}
+            weekSchedule={weekSchedule}
             onClose={() => setIsShareModalOpen(false)}
           />
         )}

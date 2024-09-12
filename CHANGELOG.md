@@ -10,6 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Time allocation chart
 - PWA and mobile friendly
 - Social sharing of schedule
+- Week-long schedule
+- Select week starting day (Monday or Sunday)
+- Tool tip encouraging customization
 
 ## [1.0.0] - 2024-08-28
 ### Added
