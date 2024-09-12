@@ -3,22 +3,22 @@
   "name": "JavaScript Unicode Symbol Clock Hourly Habit Representation",
   "icons": [
     {
-      "src": "favicon.ico",
+      "src": "/JSUsCH2R/favicon.ico",
       "sizes": "64x64 32x32 24x24 16x16",
       "type": "image/x-icon"
     },
     {
-      "src": "logo192.png",
+      "src": "/JSUsCH2R/logo192.png",
       "type": "image/png",
       "sizes": "192x192"
     },
     {
-      "src": "logo512.png",
+      "src": "/JSUsCH2R/logo512.png",
       "type": "image/png",
       "sizes": "512x512"
     }
   ],
-  "start_url": ".",
+  "start_url": "/JSUsCH2R/",
   "display": "standalone",
   "theme_color": "#7FD4F5",
   "background_color": "#ffffff"

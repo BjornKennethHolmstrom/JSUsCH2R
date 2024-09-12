@@ -25,8 +25,14 @@ const WeeklySchedule = ({ weekSchedule, onDayScheduleUpdate, onEmojiClick, weekS
   };
 
   const handlers = useSwipeable({
-    onSwipedLeft: () => setShowTimeLabels(true),
-    onSwipedRight: () => setShowTimeLabels(false),
+    onSwipedLeft: (eventData) => {
+      eventData.event.preventDefault();
+      setShowTimeLabels(true);
+    },
+    onSwipedRight: (eventData) => {
+      eventData.event.preventDefault();
+      setShowTimeLabels(false);
+    },
     preventDefaultTouchmoveEvent: true,
     trackMouse: true
   });
@@ -39,10 +45,10 @@ const WeeklySchedule = ({ weekSchedule, onDayScheduleUpdate, onEmojiClick, weekS
   return (
     <div className={`${theme.card} rounded-lg shadow-lg p-6 mt-8 relative`}>
       {showTooltip && (
-        <div className={`absolute top-2 right-2 ${theme.text} text-sm bg-yellow-100 p-2 rounded shadow`}>
+        <div className={`absolute top-2 right-2 ${theme.modalBackground} ${theme.text} text-sm p-2 rounded shadow`}>
           This is a sample schedule. Customize it to fit your lifestyle!
           <button 
-            className="ml-2 text-xs underline"
+            className={`ml-2 text-xs underline ${theme.accent}`}
             onClick={onTooltipDismiss}
           >
             Got it
@@ -68,7 +74,7 @@ const WeeklySchedule = ({ weekSchedule, onDayScheduleUpdate, onEmojiClick, weekS
           ?
         </button>
       </div>
-      <div {...handlers}>
+      <div {...handlers} className="overflow-hidden touch-none">
         <div className="hidden sm:block mb-2">
           <button
             onClick={() => setShowTimeLabels(!showTimeLabels)}
