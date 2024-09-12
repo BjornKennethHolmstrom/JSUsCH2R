@@ -109,17 +109,17 @@ const App = () => {
   };
 
   return (
-    <div className={`min-h-screen ${theme.background} ${theme.text} p-4 flex flex-col`}>
-      <div className="flex-grow">
+    <div className={`min-h-screen ${theme.background} ${theme.text} p-2 sm:p-4 flex flex-col`}>
+      <div className="flex-grow max-w-4xl mx-auto w-full">
         <ThemeSelector />
         <JSUsCH2R schedule={schedule} onEmojiClick={handleEmojiClick} />
+        <TimeAllocationAnalysis schedule={schedule} />
         <EmojiLibrary
           emojiLibrary={emojiLibrary}
           onAddEmoji={handleAddEmoji}
           onRemoveEmoji={handleRemoveEmoji}
           onRestoreDefaults={() => setEmojiLibrary(defaultEmojiLibrary)}
         />
-        <TimeAllocationAnalysis schedule={schedule} />
         {editingIndex !== null && (
           <EditPopup
             emoji={schedule[editingIndex].emoji}
