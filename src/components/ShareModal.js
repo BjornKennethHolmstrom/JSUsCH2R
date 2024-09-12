@@ -3,27 +3,23 @@ import html2canvas from 'html2canvas';
 import { useTheme } from '../themes';
 import { generateScheduleStats } from '../utils/scheduleStats';
 
-// Unicode-safe encoding function
-const encodeString = (str) => {
-  return encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, (match, p1) => String.fromCharCode('0x' + p1));
-};
-
-const ShareModal = ({ schedule, onClose }) => {
+const ShareModal = ({ weekSchedule, activeDay, onClose }) => {
   const { theme } = useTheme();
   const [shareMessage, setShareMessage] = useState("Check out my JSUsCH²R schedule!");
   const [shareUrl, setShareUrl] = useState('');
   const [shareImage, setShareImage] = useState('');
+  const [shareMode, setShareMode] = useState('day'); // 'day' or 'week'
   const scheduleRef = useRef(null);
-  const stats = generateScheduleStats(schedule);
 
   useEffect(() => {
     generateShareableUrl();
     generateShareableImage();
-  }, []);
+  }, [shareMode]);
 
   const generateShareableUrl = () => {
-    const encodedSchedule = btoa(encodeString(JSON.stringify(schedule)));
-    const url = `${window.location.origin}${window.location.pathname}#schedule=${encodedSchedule}`;
+    const scheduleToShare = shareMode === 'day' ? weekSchedule[activeDay] : weekSchedule;
+    const encodedSchedule = btoa(encodeURIComponent(JSON.stringify(scheduleToShare)));
+    const url = `${window.location.origin}${window.location.pathname}#schedule=${encodedSchedule}&mode=${shareMode}`;
     setShareUrl(url);
   };
 
@@ -35,8 +31,9 @@ const ShareModal = ({ schedule, onClose }) => {
   };
 
   const handleShare = async () => {
+    const stats = generateScheduleStats(shareMode === 'day' ? weekSchedule[activeDay] : Object.values(weekSchedule).flat());
     const shareData = {
-      title: 'My JSUsCH²R Schedule',
+      title: `My JSUsCH²R ${shareMode === 'day' ? 'Day' : 'Week'} Schedule`,
       text: `${shareMessage}\n\nStats:\n• Most frequent activity: ${stats.mostFrequentActivity.name} (${stats.mostFrequentActivity.hours} hours)\n• Unique activities: ${stats.uniqueActivities}\n• Productive hours: ${stats.productiveHours}\n• Sleep hours: ${stats.sleepHours}\n\nView my schedule: ${shareUrl}`,
       url: shareUrl,
     };
@@ -49,7 +46,6 @@ const ShareModal = ({ schedule, onClose }) => {
       if (navigator.share) {
         await navigator.share(shareData);
       } else {
-        // Fallback for desktop or unsupported browsers
         navigator.clipboard.writeText(shareData.text);
         alert('Share info copied to clipboard!');
       }
@@ -63,16 +59,25 @@ const ShareModal = ({ schedule, onClose }) => {
       <div className={`${theme.card} rounded-lg p-6 max-w-md w-full`}>
         <h2 className={`text-2xl font-semibold mb-4 ${theme.text}`}>Share Your Schedule</h2>
         
+        <div className="mb-4">
+          <label className={`block mb-2 ${theme.text}`}>Share Mode:</label>
+          <select
+            value={shareMode}
+            onChange={(e) => setShareMode(e.target.value)}
+            className={`w-full p-2 border rounded ${theme.text}`}
+          >
+            <option value="day">Current Day</option>
+            <option value="week">Entire Week</option>
+          </select>
+        </div>
+
         <div ref={scheduleRef} className="bg-white p-4 rounded-lg mb-4">
-          <h3 className="text-lg font-semibold mb-2">My JSUsCH²R Schedule</h3>
-          <div className="grid grid-cols-6 gap-1">
-            {schedule.map((item, index) => (
-              <div key={index} className="text-center">
-                <div className="text-2xl">{item.emoji}</div>
-                <div className="text-xs">{index.toString().padStart(2, '0')}:00</div>
-              </div>
-            ))}
-          </div>
+          <h3 className="text-lg font-semibold mb-2">My JSUsCH²R {shareMode === 'day' ? 'Day' : 'Week'} Schedule</h3>
+          {shareMode === 'day' ? (
+            <DaySchedule schedule={weekSchedule[activeDay]} />
+          ) : (
+            <WeekSchedule weekSchedule={weekSchedule} />
+          )}
         </div>
 
         <textarea
@@ -81,16 +86,6 @@ const ShareModal = ({ schedule, onClose }) => {
           className={`w-full p-2 border rounded mb-4 ${theme.text}`}
           rows="3"
         />
-
-        <div className={`mb-4 ${theme.text}`}>
-          <h4 className="font-semibold">Schedule Stats:</h4>
-          <ul className="list-disc list-inside">
-            <li>Most frequent activity: {stats.mostFrequentActivity.name} ({stats.mostFrequentActivity.hours} hours)</li>
-            <li>Unique activities: {stats.uniqueActivities}</li>
-            <li>Productive hours: {stats.productiveHours}</li>
-            <li>Sleep hours: {stats.sleepHours}</li>
-          </ul>
-        </div>
 
         <button
           onClick={handleShare}
@@ -109,5 +104,35 @@ const ShareModal = ({ schedule, onClose }) => {
     </div>
   );
 };
+
+const DaySchedule = ({ schedule }) => (
+  <div className="grid grid-cols-6 gap-1">
+    {schedule.map((item, index) => (
+      <div key={index} className="text-center">
+        <div className="text-2xl">{item.emoji}</div>
+        <div className="text-xs">{index.toString().padStart(2, '0')}:00</div>
+      </div>
+    ))}
+  </div>
+);
+
+const WeekSchedule = ({ weekSchedule }) => (
+  <div className="space-y-2">
+    {Object.entries(weekSchedule).map(([day, schedule]) => (
+      <div key={day} className="flex items-center">
+        <div className="w-10 font-bold">{day}</div>
+        <div className="flex-1 overflow-x-auto">
+          <div className="flex">
+            {schedule.map((item, index) => (
+              <div key={index} className="text-center mx-1">
+                <div className="text-lg">{item.emoji}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    ))}
+  </div>
+);
 
 export default ShareModal;

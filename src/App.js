@@ -102,6 +102,7 @@ const App = () => {
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [weekStart, setWeekStart] = useLocalStorage('jsusch2r-week-start', 'Mon');
   const [hasSeenTooltip, setHasSeenTooltip] = useLocalStorage('jsusch2r-has-seen-tooltip', false);
+  const [activeDay, setActiveDay] = useState('Mon');
 
   const handleDayScheduleUpdate = (day, newDaySchedule) => {
     setWeekSchedule(prevWeekSchedule => ({
@@ -148,13 +149,13 @@ const App = () => {
   return (
     <div className={`min-h-screen ${theme.background} ${theme.text} p-2 sm:p-4 flex flex-col`}>
       <div className="flex-grow max-w-4xl mx-auto w-full">
-        <ThemeSelector />
         <div className="flex justify-between items-center mb-4">
+          <ThemeSelector />
           <button
             onClick={toggleWeekStart}
-            className={`${theme.accent} ${theme.text} px-4 py-2 rounded ${theme.hover}`}
+            className={`${theme.accent} ${theme.text} px-4 py-2 rounded ${theme.hover} ml-4`}
           >
-            Week starts on: {weekStart}
+            Week starts: {weekStart}
           </button>
         </div>
         <WeeklySchedule
@@ -164,6 +165,7 @@ const App = () => {
           weekStart={weekStart}
           showTooltip={!hasSeenTooltip}
           onTooltipDismiss={handleTooltipDismiss}
+          onActiveDayChange={setActiveDay}
         />
         <TimeAllocationAnalysis schedule={Object.values(weekSchedule).flat()} />
         <EmojiLibrary
@@ -193,6 +195,7 @@ const App = () => {
         {isShareModalOpen && (
           <ShareModal
             weekSchedule={weekSchedule}
+            activeDay={activeDay}
             onClose={() => setIsShareModalOpen(false)}
           />
         )}
