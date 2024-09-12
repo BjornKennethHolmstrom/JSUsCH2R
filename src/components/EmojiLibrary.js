@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { useTheme } from '../themes';
+import EmojiLibraryHelpModal from './EmojiLibraryHelpModal';
 
 const EmojiLibrary = ({ emojiLibrary, onAddEmoji, onRemoveEmoji, onRestoreDefaults }) => {
   const [newEmoji, setNewEmoji] = useState('');
   const [newActivity, setNewActivity] = useState('');
+  const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
   const { theme } = useTheme();
 
   const handleAddEmoji = () => {
@@ -15,13 +17,21 @@ const EmojiLibrary = ({ emojiLibrary, onAddEmoji, onRemoveEmoji, onRestoreDefaul
   };
 
   return (
-    <div className={`mt-8 ${theme.card} rounded-lg shadow-lg p-6 max-w-2xl mx-auto`}>
-      <h2 className={`text-2xl font-semibold mb-4 ${theme.text}`}>Emoji Library</h2>
+    <div className={`${theme.card} rounded-lg shadow-lg p-6 mt-8 max-w-2xl mx-auto`}>
+      <div className="flex justify-between items-center mb-4">
+        <h2 className={`text-2xl font-semibold ${theme.text}`}>Emoji Library</h2>
+        <button
+          onClick={() => setIsHelpModalOpen(true)}
+          className={`${theme.accent} ${theme.text} px-2 py-1 rounded ${theme.hover} text-sm`}
+        >
+          ?
+        </button>
+      </div>
       <div className="flex flex-wrap gap-2 mb-4">
         {emojiLibrary.map((item, index) => (
           <button
             key={index}
-            className={`text-2xl p-2 rounded ${theme.hover}`}
+            className={`text-2xl p-2 ${theme.emojiBg} rounded ${theme.hover}`}
             onClick={() => onRemoveEmoji(item.emoji)}
             title={`${item.activity} (Click to remove)`}
           >
@@ -55,11 +65,14 @@ const EmojiLibrary = ({ emojiLibrary, onAddEmoji, onRemoveEmoji, onRestoreDefaul
         </button>
         <button
           onClick={onRestoreDefaults}
-          className={`bg-gray-500 text-white px-4 py-2 rounded ${theme.hover}`}
+          className={`${theme.accent} ${theme.text} px-4 py-2 rounded ${theme.hover}`}
         >
           Restore Defaults
         </button>
       </div>
+      {isHelpModalOpen && (
+        <EmojiLibraryHelpModal onClose={() => setIsHelpModalOpen(false)} />
+      )}
     </div>
   );
 };

@@ -12,6 +12,7 @@ const themes = {
     emojiBg: 'bg-gray-200',
     dropdown: 'bg-white text-gray-800',
     modal: 'bg-white',
+    modalBackground: 'bg-white',
   },
   dark: {
     name: 'Dark Mode',
@@ -24,6 +25,7 @@ const themes = {
     emojiBg: 'bg-gray-600',
     dropdown: 'bg-gray-700 text-gray-200',
     modal: 'bg-gray-800',
+    modalBackground: 'bg-gray-800',
   },
   nature: {
     name: 'Nature',
@@ -33,6 +35,10 @@ const themes = {
     accent: 'bg-lime-300',
     hover: 'hover:bg-green-200',
     input: 'bg-white text-gray-900',
+    emojiBg: 'bg-green-200',
+    dropdown: 'bg-white text-gray-900',
+    modal: 'bg-green-100',
+    modalBackground: 'bg-green-100',
   },
   sunset: {
     name: 'Sunset',
@@ -42,6 +48,10 @@ const themes = {
     accent: 'bg-pink-400',
     hover: 'hover:bg-orange-200',
     input: 'bg-white text-gray-900',
+    emojiBg: 'bg-orange-200',
+    dropdown: 'bg-white text-gray-900',
+    modal: 'bg-orange-100',
+    modalBackground: 'bg-orange-100',
   },
   ocean: {
     name: 'Ocean',
@@ -51,6 +61,10 @@ const themes = {
     accent: 'bg-blue-400',
     hover: 'hover:bg-cyan-200',
     input: 'bg-white text-gray-900',
+    emojiBg: 'bg-cyan-200',
+    dropdown: 'bg-white text-gray-900',
+    modal: 'bg-cyan-100',
+    modalBackground: 'bg-cyan-100',
   },
   lavender: {
     name: 'Lavender',
@@ -60,6 +74,10 @@ const themes = {
     accent: 'bg-purple-300',
     hover: 'hover:bg-purple-200',
     input: 'bg-white text-gray-800',
+    emojiBg: 'bg-purple-200',
+    dropdown: 'bg-white text-gray-800',
+    modal: 'bg-purple-100',
+    modalBackground: 'bg-purple-100',
   },
   midnight: {
     name: 'Midnight',
@@ -72,6 +90,7 @@ const themes = {
     emojiBg: 'bg-indigo-700',
     dropdown: 'bg-indigo-800 text-gray-200',
     modal: 'bg-indigo-900',
+    modalBackground: 'bg-indigo-900',
   },
   coffee: {
     name: 'Coffee',
@@ -84,6 +103,7 @@ const themes = {
     emojiBg: 'bg-amber-700',
     dropdown: 'bg-amber-800 text-gray-200',
     modal: 'bg-amber-900',
+    modalBackground: 'bg-amber-900',
   },
   pastel: {
     name: 'Pastel',
@@ -93,6 +113,10 @@ const themes = {
     accent: 'bg-yellow-200',
     hover: 'hover:bg-pink-200',
     input: 'bg-white text-gray-800',
+    emojiBg: 'bg-pink-200',
+    dropdown: 'bg-white text-gray-800',
+    modal: 'bg-pink-100',
+    modalBackground: 'bg-pink-100',
   },
   grayscale: {
     name: 'Grayscale',
@@ -102,6 +126,10 @@ const themes = {
     accent: 'bg-gray-600',
     hover: 'hover:bg-gray-300',
     input: 'bg-white text-gray-800',
+    emojiBg: 'bg-gray-300',
+    dropdown: 'bg-white text-gray-800',
+    modal: 'bg-white',
+    modalBackground: 'bg-white',
   },
 };
 

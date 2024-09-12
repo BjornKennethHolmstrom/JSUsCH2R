@@ -73,6 +73,7 @@ const WeeklySchedule = ({ weekSchedule, onDayScheduleUpdate, onEmojiClick, weekS
           onEmojiClick={handleEmojiClick}
           onScheduleUpdate={(newSchedule) => onDayScheduleUpdate(activeDay, newSchedule)}
           showTimeLabels={showTimeLabels}
+          activeDay={activeDay}
         />
       </div>
     </div>

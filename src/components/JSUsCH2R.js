@@ -1,20 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { useTheme } from '../themes';
 
-const JSUsCH2R = ({ schedule, onEmojiClick, onScheduleUpdate, showTimeLabels }) => {
-  const [currentHour, setCurrentHour] = useState(new Date().getHours());
-  const [currentEmoji, setCurrentEmoji] = useState('');
+const JSUsCH2R = ({ schedule, onEmojiClick, onScheduleUpdate, showTimeLabels, activeDay }) => {
+  const [currentTime, setCurrentTime] = useState(new Date());
   const { theme } = useTheme();
 
   useEffect(() => {
     const timer = setInterval(() => {
-      const now = new Date();
-      setCurrentHour(now.getHours());
-      setCurrentEmoji(schedule[now.getHours()]?.emoji || '⏺');
+      setCurrentTime(new Date());
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [schedule]);
+  }, []);
+
+  const currentHour = currentTime.getHours();
+  const currentDay = currentTime.toLocaleString('en-US', {weekday: 'short'});
+  const currentEmoji = schedule[currentHour]?.emoji || '⏺';
 
   const formatHourRange = (index) => {
     const start = index.toString().padStart(2, '0');
@@ -22,15 +23,19 @@ const JSUsCH2R = ({ schedule, onEmojiClick, onScheduleUpdate, showTimeLabels }) 
     return `${start}:00 - ${end}:00`;
   };
 
+  const isCurrentTimeSlot = (index) => {
+    return currentDay === activeDay && index === currentHour;
+  };
+
   return (
     <div className={`flex flex-col items-center justify-center ${theme.text}`}>
       <div className="text-6xl mb-4">{currentEmoji}</div>
-      <p className="text-xl mb-4">Current Time: {new Date().toLocaleTimeString()}</p>
+      <p className="text-xl mb-4">Current Time: {currentTime.toLocaleTimeString()}</p>
       <div className="grid grid-cols-6 gap-2">
         {schedule.map((item, index) => (
           <div key={index} className="flex flex-col items-center">
             <button 
-              className={`text-2xl p-2 rounded ${index === currentHour ? theme.accent : theme.emojiBg} ${theme.hover}`}
+              className={`text-2xl p-2 rounded ${isCurrentTimeSlot(index) ? theme.accent : theme.emojiBg} ${theme.hover}`}
               title={`${formatHourRange(index)}\n${item.activity}\nClick to edit`}
               onClick={() => onEmojiClick(index)}
             >
