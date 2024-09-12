@@ -30,7 +30,7 @@ const JSUsCH2R = ({ schedule, onEmojiClick }) => {
       </p>
       <div className={`${theme.card} rounded-lg shadow-lg p-6 max-w-2xl w-full`}>
         <p className="text-lg mb-2">JavaScript Unicode Symbol Clock - Hourly Habit Representation</p>
-        <p className="text-sm mb-4 italic">This is just an excuse to make a funny acronym.</p>
+        <p className="text-sm mb-4 italic">This was originally just an excuse to make a funny acronym.</p>
         <p className="mb-4">Shows Unicode symbols representing human activity</p>
         <div className="text-6xl mb-4">{currentEmoji}</div>
         <p className="text-xl mb-4">Current Time: {new Date().toLocaleTimeString()}</p>

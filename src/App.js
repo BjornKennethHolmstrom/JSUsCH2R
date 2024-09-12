@@ -3,6 +3,7 @@ import JSUsCH2R from './components/JSUsCH2R';
 import EmojiLibrary from './components/EmojiLibrary';
 import EditPopup from './components/EditPopup';
 import ThemeSelector from './components/ThemeSelector';
+import TimeAllocationAnalysis from './components/TimeAllocationAnalysis';
 import { useTheme } from './themes';
 
 const useLocalStorage = (key, initialValue) => {
@@ -118,6 +119,7 @@ const App = () => {
           onRemoveEmoji={handleRemoveEmoji}
           onRestoreDefaults={() => setEmojiLibrary(defaultEmojiLibrary)}
         />
+        <TimeAllocationAnalysis schedule={schedule} />
         {editingIndex !== null && (
           <EditPopup
             emoji={schedule[editingIndex].emoji}

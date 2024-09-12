@@ -14,6 +14,7 @@ Created by [Björn Kenneth Holmström](https://bjornkennethholmstrom.wordpress.c
 - Real-time clock display
 - Persistent local storage of schedule and emoji library
 - 10 color themes
+- Time allocation chart
 
 ## Getting Started
 
