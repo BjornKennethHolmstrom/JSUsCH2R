@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import JSUsCH2R from './components/JSUsCH2R';
 import EmojiLibrary from './components/EmojiLibrary';
 import EditPopup from './components/EditPopup';
+import ThemeSelector from './components/ThemeSelector';
+import { useTheme } from './themes';
 
 const useLocalStorage = (key, initialValue) => {
   const [storedValue, setStoredValue] = useState(() => {
@@ -77,6 +79,8 @@ const App = () => {
   const [schedule, setSchedule] = useLocalStorage('jsusch2r-schedule', defaultSchedule);
   const [emojiLibrary, setEmojiLibrary] = useLocalStorage('jsusch2r-emoji-library', defaultEmojiLibrary);
   const [editingIndex, setEditingIndex] = useState(null);
+  const { theme } = useTheme();
+
 
   const handleScheduleUpdate = (newSchedule) => {
     setSchedule(newSchedule);
@@ -104,8 +108,9 @@ const App = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#7FD4F5] p-4 flex flex-col">
+    <div className={`min-h-screen ${theme.background} ${theme.text} p-4 flex flex-col`}>
       <div className="flex-grow">
+        <ThemeSelector />
         <JSUsCH2R schedule={schedule} onEmojiClick={handleEmojiClick} />
         <EmojiLibrary
           emojiLibrary={emojiLibrary}
@@ -128,7 +133,7 @@ const App = () => {
           href="https://github.com/bjornkj/JSUsCH2R" 
           target="_blank" 
           rel="noopener noreferrer" 
-          className="text-sm text-gray-600 hover:text-gray-800 block"
+          className={`text-sm ${theme.text} hover:underline block`}
         >
           JSUsCH²R Project Homepage
         </a>
@@ -136,7 +141,7 @@ const App = () => {
           href="https://www.paypal.com/donate/?hosted_button_id=FX7FQMDQBAR4N" 
           target="_blank" 
           rel="noopener noreferrer" 
-          className="text-sm text-gray-600 hover:text-gray-800 block"
+          className={`text-sm ${theme.text} hover:underline block`}
         >
           Donate to support
         </a>

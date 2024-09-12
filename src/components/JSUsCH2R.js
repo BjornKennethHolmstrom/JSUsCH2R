@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { useTheme } from '../themes';
 
 const JSUsCH2R = ({ schedule, onEmojiClick }) => {
   const [currentHour, setCurrentHour] = useState(new Date().getHours());
   const [currentEmoji, setCurrentEmoji] = useState('');
+  const { theme } = useTheme();
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -21,12 +23,12 @@ const JSUsCH2R = ({ schedule, onEmojiClick }) => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center bg-[#7FD4F5] text-gray-800 p-4">
+    <div className={`flex flex-col items-center justify-center ${theme.background} ${theme.text} p-4`}>
       <h1 className="text-4xl font-bold mb-2">JSUsCH²R</h1>
       <p className="text-sm mb-4 text-center">
         by <a href="https://bjornkennethholmstrom.wordpress.com" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800">Björn Kenneth Holmström</a>
       </p>
-      <div className="bg-white rounded-lg shadow-lg p-6 max-w-2xl w-full">
+      <div className={`${theme.card} rounded-lg shadow-lg p-6 max-w-2xl w-full`}>
         <p className="text-lg mb-2">JavaScript Unicode Symbol Clock - Hourly Habit Representation</p>
         <p className="text-sm mb-4 italic">This is just an excuse to make a funny acronym.</p>
         <p className="mb-4">Shows Unicode symbols representing human activity</p>
@@ -36,7 +38,7 @@ const JSUsCH2R = ({ schedule, onEmojiClick }) => {
           {schedule.map((item, index) => (
             <button 
               key={index}
-              className={`text-2xl p-2 rounded ${index === currentHour ? 'bg-yellow-300' : 'bg-gray-200'} hover:bg-blue-200`}
+              className={`text-2xl p-2 rounded ${index === currentHour ? theme.accent : 'bg-gray-200'} ${theme.hover}`}
               title={`${formatHourRange(index)}\n${item.activity}\nClick to edit`}
               onClick={() => onEmojiClick(index)}
             >

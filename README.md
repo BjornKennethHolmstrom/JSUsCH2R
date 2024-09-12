@@ -13,6 +13,7 @@ Created by [Björn Kenneth Holmström](https://bjornkennethholmstrom.wordpress.c
 - Editable activities for each hour
 - Real-time clock display
 - Persistent local storage of schedule and emoji library
+- 10 color themes
 
 ## Getting Started
 
