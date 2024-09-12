@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import JSUsCH2R from './components/JSUsCH2R';
 import EmojiLibrary from './components/EmojiLibrary';
 import EditPopup from './components/EditPopup';
 import ThemeSelector from './components/ThemeSelector';
 import TimeAllocationAnalysis from './components/TimeAllocationAnalysis';
+import ShareModal from './components/ShareModal';
 import { useTheme } from './themes';
 
 const useLocalStorage = (key, initialValue) => {
@@ -76,12 +77,16 @@ const defaultEmojiLibrary = [
   { emoji: "📖", activity: "Reading" }
 ];
 
+const decodeString = (str) => {
+  return decodeURIComponent(str.split('').map(function(c) {
+    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+  }).join(''));
+};
+
 const App = () => {
   const [schedule, setSchedule] = useLocalStorage('jsusch2r-schedule', defaultSchedule);
   const [emojiLibrary, setEmojiLibrary] = useLocalStorage('jsusch2r-emoji-library', defaultEmojiLibrary);
   const [editingIndex, setEditingIndex] = useState(null);
-  const { theme } = useTheme();
-
 
   const handleScheduleUpdate = (newSchedule) => {
     setSchedule(newSchedule);
@@ -108,6 +113,23 @@ const App = () => {
     setEmojiLibrary(emojiLibrary.filter(item => item.emoji !== emoji));
   };
 
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+
+  useEffect(() => {
+    const hash = window.location.hash;
+    if (hash.startsWith('#schedule=')) {
+      const encodedSchedule = hash.replace('#schedule=', '');
+      try {
+        const decodedSchedule = JSON.parse(decodeString(atob(encodedSchedule)));
+        setSchedule(decodedSchedule);
+      } catch (error) {
+        console.error('Error decoding schedule:', error);
+      }
+    }
+  }, []); 
+
+  const { theme } = useTheme();
+
   return (
     <div className={`min-h-screen ${theme.background} ${theme.text} p-2 sm:p-4 flex flex-col`}>
       <div className="flex-grow max-w-4xl mx-auto w-full">
@@ -120,6 +142,12 @@ const App = () => {
           onRemoveEmoji={handleRemoveEmoji}
           onRestoreDefaults={() => setEmojiLibrary(defaultEmojiLibrary)}
         />
+        <button
+          onClick={() => setIsShareModalOpen(true)}
+          className={`${theme.accent} ${theme.text} px-4 py-2 rounded ${theme.hover} mt-4`}
+        >
+          Share My Schedule
+        </button>
         {editingIndex !== null && (
           <EditPopup
             emoji={schedule[editingIndex].emoji}
@@ -127,6 +155,12 @@ const App = () => {
             emojiLibrary={emojiLibrary}
             onSave={handleEditSave}
             onClose={() => setEditingIndex(null)}
+          />
+        )}
+        {isShareModalOpen && (
+          <ShareModal
+            schedule={schedule}
+            onClose={() => setIsShareModalOpen(false)}
           />
         )}
       </div>

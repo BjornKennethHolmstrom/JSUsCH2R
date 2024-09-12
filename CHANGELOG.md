@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Ten color themes
 - Time allocation chart
 - PWA and mobile friendly
+- Social sharing of schedule
 
 ## [1.0.0] - 2024-08-28
 ### Added

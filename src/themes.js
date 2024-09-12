@@ -88,7 +88,7 @@ const ThemeContext = createContext();
 export const useTheme = () => useContext(ThemeContext);
 
 export const ThemeProvider = ({ children }) => {
-  const [currentTheme, setCurrentTheme] = useState('default');
+  const [currentTheme, setCurrentTheme] = useState('dark'); // Changed from 'default' to 'dark'
 
   const theme = themes[currentTheme];
 

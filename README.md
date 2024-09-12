@@ -16,6 +16,7 @@ Created by [Björn Kenneth Holmström](https://bjornkennethholmstrom.wordpress.c
 - 10 color themes
 - Time allocation chart
 - PWA and mobile friendly
+- Social sharing of schedule
 
 ## Getting Started
 
