@@ -12,6 +12,8 @@ Created by [Björn Kenneth Holmström](https://bjornkennethholmstrom.wordpress.c
 - Customizable emoji library
 - Editable activities for each hour
 - Real-time clock display
+- Swipe or press button to show time info
+- Help modal for schedule
 - Persistent local storage of schedule and emoji library
 - 10 color themes
 - Time allocation chart

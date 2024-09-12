@@ -6,6 +6,7 @@ import ThemeSelector from './components/ThemeSelector';
 import TimeAllocationAnalysis from './components/TimeAllocationAnalysis';
 import ShareModal from './components/ShareModal';
 import WeeklySchedule from './components/WeeklySchedule';
+import HelpModal from './components/HelpModal';
 import { useTheme } from './themes';
 
 const useLocalStorage = (key, initialValue) => {
@@ -103,6 +104,7 @@ const App = () => {
   const [weekStart, setWeekStart] = useLocalStorage('jsusch2r-week-start', 'Mon');
   const [hasSeenTooltip, setHasSeenTooltip] = useLocalStorage('jsusch2r-has-seen-tooltip', false);
   const [activeDay, setActiveDay] = useState('Mon');
+  const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
 
   const handleDayScheduleUpdate = (day, newDaySchedule) => {
     setWeekSchedule(prevWeekSchedule => ({
@@ -165,7 +167,7 @@ const App = () => {
           weekStart={weekStart}
           showTooltip={!hasSeenTooltip}
           onTooltipDismiss={handleTooltipDismiss}
-          onActiveDayChange={setActiveDay}
+          onOpenHelpModal={() => setIsHelpModalOpen(true)}
         />
         <TimeAllocationAnalysis schedule={Object.values(weekSchedule).flat()} />
         <EmojiLibrary
@@ -198,6 +200,9 @@ const App = () => {
             activeDay={activeDay}
             onClose={() => setIsShareModalOpen(false)}
           />
+        )}
+        {isHelpModalOpen && (
+          <HelpModal onClose={() => setIsHelpModalOpen(false)} />
         )}
       </div>
       <div className="text-center mt-4">

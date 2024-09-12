@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Week-long schedule
 - Select week starting day (Monday or Sunday)
 - Tool tip encouraging customization
+- Swipe or press button to show time info
+- Help modal for schedule
 
 ## [1.0.0] - 2024-08-28
 ### Added
