@@ -168,8 +168,13 @@ const App = () => {
           showTooltip={!hasSeenTooltip}
           onTooltipDismiss={handleTooltipDismiss}
           onOpenHelpModal={() => setIsHelpModalOpen(true)}
+          onActiveDayChange={setActiveDay}
+          activeDay={activeDay}
         />
-        <TimeAllocationAnalysis schedule={Object.values(weekSchedule).flat()} />
+        <TimeAllocationAnalysis 
+          weekSchedule={weekSchedule}
+          activeDay={activeDay}
+        />
         <EmojiLibrary
           emojiLibrary={emojiLibrary}
           onAddEmoji={handleAddEmoji}

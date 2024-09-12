@@ -25,7 +25,7 @@ const ShareModal = ({ weekSchedule, activeDay, onClose }) => {
     const stats = generateScheduleStats(shareMode === 'day' ? weekSchedule[activeDay] : Object.values(weekSchedule).flat());
     const shareData = {
       title: `My JSUsCH²R ${shareMode === 'day' ? 'Day' : 'Week'} Schedule`,
-      text: `${shareMessage}\n\nStats:\n• Most frequent activity: ${stats.mostFrequentActivity.name} (${stats.mostFrequentActivity.hours} hours)\n• Unique activities: ${stats.uniqueActivities}\n• Productive hours: ${stats.productiveHours}\n• Sleep hours: ${stats.sleepHours}\n\nGet JSUsCH²R: https://github.com/bjornkj/JSUsCH2R`,
+      text: `${shareMessage}\n\nStats:\n• Most frequent activity: ${stats.mostFrequentActivity.name} (${stats.mostFrequentActivity.hours} hours)\n• Unique activities: ${stats.uniqueActivities}\n• Productive hours: ${stats.productiveHours}\n• Sleep hours: ${stats.sleepHours}\n\nGet JSUsCH²R: https://github.com/BjornKennethHolmstrom/JSUsCH2R`,
     };
 
     if (shareImage) {

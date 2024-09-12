@@ -9,12 +9,11 @@ const COLORS = [
   '#FFB74D'
 ];
 
-const TimeAllocationAnalysis = ({ schedule }) => {
+const TimeAllocationAnalysis = ({ weekSchedule, activeDay }) => {
   const { theme } = useTheme();
-  const [showTime, setShowTime] = useState(true);
-  const [showPercentage, setShowPercentage] = useState(true);
+  const [analysisMode, setAnalysisMode] = useState('week');
 
-  const analyzeSchedule = () => {
+  const analyzeSchedule = (schedule) => {
     const analysis = {};
     schedule.forEach(item => {
       if (analysis[item.activity]) {
@@ -27,79 +26,71 @@ const TimeAllocationAnalysis = ({ schedule }) => {
     return Object.entries(analysis).map(([activity, hours]) => ({
       name: activity,
       value: hours,
-      percentage: (hours / 24 * 100).toFixed(1)
+      percentage: (hours / (analysisMode === 'week' ? 168 : 24) * 100).toFixed(1)
     }));
   };
 
-  const data = analyzeSchedule();
+  const data = analysisMode === 'week' 
+    ? analyzeSchedule(Object.values(weekSchedule).flat())
+    : analyzeSchedule(weekSchedule[activeDay]);
 
-  const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent, index, name, value }) => {
-    const RADIAN = Math.PI / 180;
-    const radius = outerRadius + 30;
-    const x = cx + radius * Math.cos(-midAngle * RADIAN);
-    const y = cy + radius * Math.sin(-midAngle * RADIAN);
-
-    let label = name;
-    if (showTime) label += ` (${value}h)`;
-    if (showPercentage) label += ` ${(percent * 100).toFixed(1)}%`;
-
-    return (
-      <text x={x} y={y} fill={COLORS[index % COLORS.length]} textAnchor={x > cx ? 'start' : 'end'} dominantBaseline="central">
-        {label}
-      </text>
-    );
+  const CustomTooltip = ({ active, payload }) => {
+    if (active && payload && payload.length) {
+      const data = payload[0].payload;
+      return (
+        <div className={`${theme.modalBackground} p-2 rounded shadow`}>
+          <p className={`${theme.text} font-semibold`}>{data.name}</p>
+          <p className={theme.text}>{data.value} hours ({data.percentage}%)</p>
+        </div>
+      );
+    }
+    return null;
   };
 
   return (
     <div className={`mt-8 ${theme.card} rounded-lg shadow-lg p-6 max-w-2xl mx-auto`}>
-      <h2 className={`text-2xl font-semibold mb-4 ${theme.text}`}>Time Allocation Analysis</h2>
-      <div className="flex justify-center space-x-4 mb-4">
-        <label className={`flex items-center ${theme.text}`}>
-          <input
-            type="checkbox"
-            checked={showTime}
-            onChange={() => setShowTime(!showTime)}
-            className="mr-2"
-          />
-          Show time
-        </label>
-        <label className={`flex items-center ${theme.text}`}>
-          <input
-            type="checkbox"
-            checked={showPercentage}
-            onChange={() => setShowPercentage(!showPercentage)}
-            className="mr-2"
-          />
-          Show %
-        </label>
+      <div className="flex justify-between items-center mb-4">
+        <h2 className={`text-2xl font-semibold ${theme.text}`}>Time Allocation Analysis</h2>
+        <select
+          value={analysisMode}
+          onChange={(e) => setAnalysisMode(e.target.value)}
+          className={`p-2 rounded ${theme.input}`}
+        >
+          <option value="week">Weekly</option>
+          <option value="day">Daily</option>
+        </select>
       </div>
-      <div className="w-full h-96">
-        <ResponsiveContainer width="100%" height="100%">
-          <PieChart>
-            <Pie
-              data={data}
-              cx="50%"
-              cy="50%"
-              outerRadius={120}
-              fill="#8884d8"
-              dataKey="value"
-              labelLine={false}
-              label={renderCustomizedLabel}
-            >
-              {data.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-              ))}
-            </Pie>
-            <Tooltip 
-              formatter={(value, name, props) => {
-                let result = [];
-                if (showTime) result.push(`${value} hours`);
-                if (showPercentage) result.push(`${props.payload.percentage}%`);
-                return [result.join(' - '), name];
-              }}
-            />
-          </PieChart>
-        </ResponsiveContainer>
+      <div className="flex flex-col">
+        <div className="w-full h-64 mb-4">
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie
+                data={data}
+                cx="50%"
+                cy="50%"
+                outerRadius={100}
+                fill="#8884d8"
+                dataKey="value"
+                label={({ name, percentage }) => `${name} ${percentage}%`}
+              >
+                {data.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                ))}
+              </Pie>
+              <Tooltip content={<CustomTooltip />} />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
+        <div className="w-full">
+          <ul className={`${theme.text} grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2`}>
+            {data.map((item, index) => (
+              <li key={index} className="flex items-center">
+                <span className="inline-block w-4 h-4 mr-2 flex-shrink-0" style={{ backgroundColor: COLORS[index % COLORS.length] }}></span>
+                <span className="truncate">{item.name}: {item.value}h</span>
+              </li>
+            ))}
+          </ul>
+        </div>
       </div>
     </div>
   );

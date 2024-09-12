@@ -3,7 +3,7 @@ import { useTheme } from '../themes';
 import JSUsCH2R from './JSUsCH2R';
 import { useSwipeable } from 'react-swipeable';
 
-const WeeklySchedule = ({ weekSchedule, onDayScheduleUpdate, onEmojiClick, weekStart, showTooltip, onTooltipDismiss, onOpenHelpModal }) => {
+const WeeklySchedule = ({ weekSchedule, onDayScheduleUpdate, onEmojiClick, weekStart, showTooltip, onTooltipDismiss, onOpenHelpModal, onActiveDayChange }) => {
   const { theme } = useTheme();
   const [activeDay, setActiveDay] = useState(weekStart);
   const [showTimeLabels, setShowTimeLabels] = useState(false);
@@ -16,6 +16,10 @@ const WeeklySchedule = ({ weekSchedule, onDayScheduleUpdate, onEmojiClick, weekS
     setActiveDay(weekStart);
   }, [weekStart]);
 
+  useEffect(() => {
+    onActiveDayChange(activeDay);
+  }, [activeDay, onActiveDayChange]);
+
   const handleEmojiClick = (index) => {
     onEmojiClick(activeDay, index);
   };
@@ -26,6 +30,11 @@ const WeeklySchedule = ({ weekSchedule, onDayScheduleUpdate, onEmojiClick, weekS
     preventDefaultTouchmoveEvent: true,
     trackMouse: true
   });
+
+  const handleDayChange = (day) => {
+    setActiveDay(day);
+    onActiveDayChange(day);
+  };
 
   return (
     <div className={`${theme.card} rounded-lg shadow-lg p-6 mt-8 relative`}>
@@ -46,7 +55,7 @@ const WeeklySchedule = ({ weekSchedule, onDayScheduleUpdate, onEmojiClick, weekS
             <button
               key={day}
               className={`flex-1 py-2 ${activeDay === day ? theme.accent : ''} ${theme.hover}`}
-              onClick={() => setActiveDay(day)}
+              onClick={() => handleDayChange(day)}
             >
               {day}
             </button>
