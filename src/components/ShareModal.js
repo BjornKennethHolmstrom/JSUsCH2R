@@ -6,27 +6,18 @@ import { generateScheduleStats } from '../utils/scheduleStats';
 const ShareModal = ({ weekSchedule, activeDay, onClose }) => {
   const { theme } = useTheme();
   const [shareMessage, setShareMessage] = useState("Check out my JSUsCH²R schedule!");
-  const [shareUrl, setShareUrl] = useState('');
   const [shareImage, setShareImage] = useState('');
-  const [shareMode, setShareMode] = useState('day'); // 'day' or 'week'
+  const [shareMode, setShareMode] = useState('day');
   const scheduleRef = useRef(null);
 
   useEffect(() => {
-    generateShareableUrl();
     generateShareableImage();
   }, [shareMode]);
-
-  const generateShareableUrl = () => {
-    const scheduleToShare = shareMode === 'day' ? weekSchedule[activeDay] : weekSchedule;
-    const encodedSchedule = btoa(encodeURIComponent(JSON.stringify(scheduleToShare)));
-    const url = `${window.location.origin}${window.location.pathname}#schedule=${encodedSchedule}&mode=${shareMode}`;
-    setShareUrl(url);
-  };
 
   const generateShareableImage = async () => {
     if (scheduleRef.current) {
       const canvas = await html2canvas(scheduleRef.current);
-      setShareImage(canvas.toDataURL());
+      setShareImage(canvas.toDataURL('image/png'));
     }
   };
 
@@ -34,20 +25,25 @@ const ShareModal = ({ weekSchedule, activeDay, onClose }) => {
     const stats = generateScheduleStats(shareMode === 'day' ? weekSchedule[activeDay] : Object.values(weekSchedule).flat());
     const shareData = {
       title: `My JSUsCH²R ${shareMode === 'day' ? 'Day' : 'Week'} Schedule`,
-      text: `${shareMessage}\n\nStats:\n• Most frequent activity: ${stats.mostFrequentActivity.name} (${stats.mostFrequentActivity.hours} hours)\n• Unique activities: ${stats.uniqueActivities}\n• Productive hours: ${stats.productiveHours}\n• Sleep hours: ${stats.sleepHours}\n\nView my schedule: ${shareUrl}`,
-      url: shareUrl,
+      text: `${shareMessage}\n\nStats:\n• Most frequent activity: ${stats.mostFrequentActivity.name} (${stats.mostFrequentActivity.hours} hours)\n• Unique activities: ${stats.uniqueActivities}\n• Productive hours: ${stats.productiveHours}\n• Sleep hours: ${stats.sleepHours}\n\nGet JSUsCH²R: https://github.com/bjornkj/JSUsCH2R`,
     };
 
-    if (shareImage && navigator.canShare && navigator.canShare({ files: [new File([shareImage], 'schedule.png', { type: 'image/png' })] })) {
-      shareData.files = [new File([shareImage], 'schedule.png', { type: 'image/png' })];
+    if (shareImage) {
+      const blob = await (await fetch(shareImage)).blob();
+      const file = new File([blob], 'schedule.png', { type: 'image/png' });
+      shareData.files = [file];
     }
 
     try {
-      if (navigator.share) {
+      if (navigator.share && navigator.canShare(shareData)) {
         await navigator.share(shareData);
       } else {
-        navigator.clipboard.writeText(shareData.text);
-        alert('Share info copied to clipboard!');
+        // Fallback for desktop or unsupported browsers
+        const tempLink = document.createElement('a');
+        tempLink.href = shareImage;
+        tempLink.download = 'my_jsusch2r_schedule.png';
+        tempLink.click();
+        alert('Image downloaded. You can share it manually along with the following text:\n\n' + shareData.text);
       }
     } catch (error) {
       console.error('Error sharing:', error);
@@ -55,8 +51,8 @@ const ShareModal = ({ weekSchedule, activeDay, onClose }) => {
   };
 
   return (
-    <div className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50`}>
-      <div className={`${theme.card} rounded-lg p-6 max-w-md w-full`}>
+    <div className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50`}>
+      <div className={`${theme.modalBackground} rounded-lg p-6 max-w-md w-full`}>
         <h2 className={`text-2xl font-semibold mb-4 ${theme.text}`}>Share Your Schedule</h2>
         
         <div className="mb-4">
