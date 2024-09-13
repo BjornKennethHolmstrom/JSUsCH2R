@@ -73,7 +73,7 @@ const defaultWeekSchedule = {
 const defaultEmojiLibrary = [
   { emoji: "😴", activity: "Sleeping" },
   { emoji: "🧘", activity: "Meditating" },
-  { emoji: "🍳", activity: "Cooking" },
+  { emoji: "🍲", activity: "Cooking" },
   { emoji: "💼", activity: "Working" },
   { emoji: "🏋️", activity: "Exercising" },
   { emoji: "📚", activity: "Reading" },
