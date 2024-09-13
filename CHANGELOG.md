@@ -4,8 +4,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.1.0] - 2024-09-12
+## [1.1.1] - 2024-09-13
+### Fixed
+- Resolved mobile layout issue in Emoji Library
+- Implemented responsive design for input fields to prevent horizontal overflow
+- Adjusted button layout for improved mobile usability
 
+## [1.1.0] - 2024-09-13
+### Added
 - Ten color themes
 - Time allocation chart
 - PWA and mobile friendly

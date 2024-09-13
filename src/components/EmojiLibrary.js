@@ -1,11 +1,9 @@
 import React, { useState } from 'react';
 import { useTheme } from '../themes';
-import EmojiLibraryHelpModal from './EmojiLibraryHelpModal';
 
 const EmojiLibrary = ({ emojiLibrary, onAddEmoji, onRemoveEmoji, onRestoreDefaults }) => {
   const [newEmoji, setNewEmoji] = useState('');
   const [newActivity, setNewActivity] = useState('');
-  const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
   const { theme } = useTheme();
 
   const handleAddEmoji = () => {
@@ -17,16 +15,8 @@ const EmojiLibrary = ({ emojiLibrary, onAddEmoji, onRemoveEmoji, onRestoreDefaul
   };
 
   return (
-    <div className={`${theme.card} rounded-lg shadow-lg p-6 mt-8 max-w-2xl mx-auto`}>
-      <div className="flex justify-between items-center mb-4">
-        <h2 className={`text-2xl font-semibold ${theme.text}`}>Emoji Library</h2>
-        <button
-          onClick={() => setIsHelpModalOpen(true)}
-          className={`${theme.accent} ${theme.text} px-2 py-1 rounded ${theme.hover} text-sm`}
-        >
-          ?
-        </button>
-      </div>
+    <div className={`${theme.card} rounded-lg shadow-lg p-4 mt-8 max-w-2xl mx-auto`}>
+      <h2 className={`text-2xl font-semibold mb-4 ${theme.text}`}>Emoji Library</h2>
       <div className="flex flex-wrap gap-2 mb-4">
         {emojiLibrary.map((item, index) => (
           <button
@@ -39,12 +29,12 @@ const EmojiLibrary = ({ emojiLibrary, onAddEmoji, onRemoveEmoji, onRestoreDefaul
           </button>
         ))}
       </div>
-      <div className="flex gap-2 mb-2">
+      <div className="flex flex-col sm:flex-row gap-2 mb-2">
         <input
           type="text"
           value={newEmoji}
           onChange={(e) => setNewEmoji(e.target.value)}
-          className={`border rounded p-2 text-center ${theme.input}`}
+          className={`border rounded p-2 text-center w-full sm:w-24 ${theme.input}`}
           maxLength={2}
           placeholder="New emoji"
         />
@@ -56,23 +46,20 @@ const EmojiLibrary = ({ emojiLibrary, onAddEmoji, onRemoveEmoji, onRestoreDefaul
           placeholder="Activity description"
         />
       </div>
-      <div className="flex gap-2">
+      <div className="flex flex-col sm:flex-row gap-2">
         <button
           onClick={handleAddEmoji}
-          className={`${theme.accent} ${theme.text} px-4 py-2 rounded ${theme.hover}`}
+          className={`${theme.accent} ${theme.text} px-4 py-2 rounded ${theme.hover} w-full sm:w-auto`}
         >
           Add Emoji
         </button>
         <button
           onClick={onRestoreDefaults}
-          className={`${theme.accent} ${theme.text} px-4 py-2 rounded ${theme.hover}`}
+          className={`${theme.accent} ${theme.text} px-4 py-2 rounded ${theme.hover} w-full sm:w-auto`}
         >
           Restore Defaults
         </button>
       </div>
-      {isHelpModalOpen && (
-        <EmojiLibraryHelpModal onClose={() => setIsHelpModalOpen(false)} />
-      )}
     </div>
   );
 };
