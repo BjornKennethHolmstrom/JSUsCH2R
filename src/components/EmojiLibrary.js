@@ -1,9 +1,13 @@
 import React, { useState } from 'react';
 import { useTheme } from '../themes';
+import EmojiLibraryHelpModal from './EmojiLibraryHelpModal';
+import ConfirmDialog from './ConfirmDialog';
 
-const EmojiLibrary = ({ emojiLibrary, onAddEmoji, onRemoveEmoji, onRestoreDefaults }) => {
+const EmojiLibrary = ({ emojiLibrary, onAddEmoji, onRemoveEmoji, onRestoreDefaults, onOpenHelpModal }) => {
   const [newEmoji, setNewEmoji] = useState('');
   const [newActivity, setNewActivity] = useState('');
+  const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
+  const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
   const { theme } = useTheme();
 
   const handleAddEmoji = () => {
@@ -14,8 +18,26 @@ const EmojiLibrary = ({ emojiLibrary, onAddEmoji, onRemoveEmoji, onRestoreDefaul
     }
   };
 
+  const handleRestoreDefaultsClick = () => {
+    setIsConfirmDialogOpen(true);
+  };
+
+  const handleConfirmRestore = () => {
+    onRestoreDefaults();
+    setIsConfirmDialogOpen(false);
+  };
+
   return (
     <div className={`${theme.card} rounded-lg shadow-lg p-4 mt-8 max-w-2xl mx-auto`}>
+      <div className="flex justify-between items-center mb-4">
+        <h2 className={`text-2xl font-semibold ${theme.text}`}>Emoji Library</h2>
+        <button
+          onClick={() => setIsHelpModalOpen(true)}
+          className={`${theme.accent} ${theme.text} px-2 py-1 rounded ${theme.hover} text-sm`}
+        >
+          ?
+        </button>
+      </div>
       <h2 className={`text-2xl font-semibold mb-4 ${theme.text}`}>Emoji Library</h2>
       <div className="flex flex-wrap gap-2 mb-4">
         {emojiLibrary.map((item, index) => (
@@ -54,12 +76,21 @@ const EmojiLibrary = ({ emojiLibrary, onAddEmoji, onRemoveEmoji, onRestoreDefaul
           Add Emoji
         </button>
         <button
-          onClick={onRestoreDefaults}
+          onClick={handleRestoreDefaultsClick}
           className={`${theme.accent} ${theme.text} px-4 py-2 rounded ${theme.hover} w-full sm:w-auto`}
         >
           Restore Defaults
         </button>
       </div>
+      {isHelpModalOpen && (
+        <EmojiLibraryHelpModal onClose={() => setIsHelpModalOpen(false)} />
+      )}
+      <ConfirmDialog
+        isOpen={isConfirmDialogOpen}
+        onClose={() => setIsConfirmDialogOpen(false)}
+        onConfirm={handleConfirmRestore}
+        message="Are you sure you want to restore default emojis? This will remove all custom emojis."
+      />
     </div>
   );
 };

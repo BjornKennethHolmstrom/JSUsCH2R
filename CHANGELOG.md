@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.4] - 2024-09-16
+### Added
+- Restored help button for the Emoji Library
+- Implemented confirmation dialog for "Restore Defaults" function in Emoji Library
+
+### Changed
+- Improved user safety by adding a confirmation step before restoring default emojis
+
 ## [1.1.3] - 2024-09-15
 ### Changed
 - Clock times in the schedule are now visible by default for improved initial comprehension
