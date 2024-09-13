@@ -41,7 +41,7 @@ const JSUsCH2R = ({ schedule, onEmojiClick, onScheduleUpdate, showTimeLabels, ac
             >
               {item.emoji}
             </button>
-            {showTimeLabels && (
+            {(showTimeLabels || showTimeLabels === undefined) && (
               <span className={`text-xs mt-1 ${theme.text}`}>
                 {index.toString().padStart(2, '0')}:00
               </span>

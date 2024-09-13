@@ -6,7 +6,14 @@ import { useSwipeable } from 'react-swipeable';
 const WeeklySchedule = ({ weekSchedule, onDayScheduleUpdate, onEmojiClick, weekStart, showTooltip, onTooltipDismiss, onOpenHelpModal, onActiveDayChange }) => {
   const { theme } = useTheme();
   const [activeDay, setActiveDay] = useState(weekStart);
-  const [showTimeLabels, setShowTimeLabels] = useState(false);
+  const [showTimeLabels, setShowTimeLabels] = useState(() => {
+    const stored = localStorage.getItem('jsusch2r-show-time-labels');
+    return stored !== null ? JSON.parse(stored) : true;
+  });
+
+  useEffect(() => {
+    localStorage.setItem('jsusch2r-show-time-labels', JSON.stringify(showTimeLabels));
+  }, [showTimeLabels]);
 
   const DAYS = weekStart === 'Mon' 
     ? ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
