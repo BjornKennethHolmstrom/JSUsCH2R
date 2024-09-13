@@ -18,7 +18,10 @@ const ShareModal = ({ weekSchedule, activeDay, timeAllocationData, onClose }) =>
 
   const generateShareableImage = async () => {
     if (scheduleRef.current) {
-      const canvas = await html2canvas(scheduleRef.current);
+      const canvas = await html2canvas(scheduleRef.current, {
+        scale: 2, // Increase resolution for sharper image
+        backgroundColor: null, // Transparent background
+      });
       setShareImage(canvas.toDataURL('image/png'));
     }
   };
@@ -87,13 +90,13 @@ const ShareModal = ({ weekSchedule, activeDay, timeAllocationData, onClose }) =>
 
         <div ref={scheduleRef} className={`${theme.card} p-4 rounded-lg mb-4`}>
           <h3 className={`text-lg font-semibold mb-2 ${theme.text}`}>
-            My JSUsCH²R {shareType === 'schedule' ? (shareMode === 'day' ? 'Day Schedule' : 'Week Schedule') : 'Time Allocation'}
+            My JSUsCH²R {shareType === 'schedule' ? (shareMode === 'day' ? 'Day' : 'Week') : 'Time Allocation'}
           </h3>
           {shareType === 'schedule' ? (
             shareMode === 'day' ? (
-              <DaySchedule schedule={weekSchedule[activeDay]} />
+              <CompactDaySchedule schedule={weekSchedule[activeDay]} />
             ) : (
-              <WeekSchedule weekSchedule={weekSchedule} />
+              <CompactWeekSchedule weekSchedule={weekSchedule} />
             )
           ) : (
             <TimeAllocationChart data={getTimeAllocationData()} />
@@ -124,31 +127,28 @@ const ShareModal = ({ weekSchedule, activeDay, timeAllocationData, onClose }) =>
     </div>
   );
 };
-const DaySchedule = ({ schedule }) => (
-  <div className="grid grid-cols-6 gap-1">
+
+const CompactDaySchedule = ({ schedule }) => (
+  <div className="grid grid-cols-6 gap-1 text-xs">
     {schedule.map((item, index) => (
-      <div key={index} className="text-center">
-        <div className="text-2xl">{item.emoji}</div>
-        <div className="text-xs">{index.toString().padStart(2, '0')}:00</div>
+      <div key={index} className="flex flex-col items-center">
+        <div className="text-lg">{item.emoji}</div>
+        <div>{index % 3 === 0 ? `${index}:00` : ''}</div>
       </div>
     ))}
   </div>
 );
 
-const WeekSchedule = ({ weekSchedule }) => (
-  <div className="space-y-2">
+const CompactWeekSchedule = ({ weekSchedule }) => (
+  <div className="grid grid-cols-7 gap-1 text-xs">
     {Object.entries(weekSchedule).map(([day, schedule]) => (
-      <div key={day} className="flex items-center">
-        <div className="w-10 font-bold">{day}</div>
-        <div className="flex-1 overflow-x-auto">
-          <div className="flex">
-            {schedule.map((item, index) => (
-              <div key={index} className="text-center mx-1">
-                <div className="text-lg">{item.emoji}</div>
-              </div>
-            ))}
+      <div key={day} className="flex flex-col items-center">
+        <div className="font-bold mb-1">{day}</div>
+        {schedule.map((item, index) => (
+          <div key={index} className="text-sm">
+            {item.emoji}
           </div>
-        </div>
+        ))}
       </div>
     ))}
   </div>
@@ -160,11 +160,11 @@ const TimeAllocationChart = ({ data }) => {
   }
 
   return (
-    <div>
+    <div className="grid grid-cols-2 gap-2 text-sm">
       {data.map((item, index) => (
-        <div key={index} className="flex items-center mb-1">
-          <div className="w-4 h-4 mr-2" style={{ backgroundColor: COLORS[index % COLORS.length] }}></div>
-          <span>{item.name}: {item.value}h ({item.percentage}%)</span>
+        <div key={index} className="flex items-center">
+          <div className="w-3 h-3 mr-1" style={{ backgroundColor: COLORS[index % COLORS.length] }}></div>
+          <span className="truncate">{item.name}: {item.value}h</span>
         </div>
       ))}
     </div>
