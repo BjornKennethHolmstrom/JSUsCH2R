@@ -2,24 +2,24 @@
 
 ## Overview
 
-JSUsCH²R is a fun and interactive web application that represents daily activities using Unicode emojis. It allows users to visualize their daily schedule in a unique and engaging way.
+JSUsCH²R is a fun and interactive web application that represents daily activities using Unicode emojis. It allows users to visualize their weekly schedule in a unique and engaging way.
 
 Created by [Björn Kenneth Holmström](https://bjornkennethholmstrom.wordpress.com)
 
 ## Features
 
-- 24-hour weeklong schedule representation using emojis
+- Week-long schedule representation using emojis
+- 10 customizable color themes, including Dark Mode
+- Time allocation chart for daily and weekly analysis
+- Social sharing of schedules
 - Customizable emoji library
-- Editable activities for each hour
 - Real-time clock display
-- Swipe or press button to show time info
-- Help modal for schedule
-- Persistent local storage of schedule and emoji library
-- 10 color themes
-- Time allocation chart
-- PWA and mobile friendly
-- Social sharing of schedule
+- Swipe or button to toggle time information display
 - Select week starting day (Monday or Sunday)
+- Help modal for easy onboarding
+- Responsive design for various screen sizes
+- PWA support for mobile-friendly usage
+- Persistent local storage of schedule and preferences
 
 ## Getting Started
 
@@ -50,8 +50,12 @@ Created by [Björn Kenneth Holmström](https://bjornkennethholmstrom.wordpress.c
 
 ## Usage
 
+- Navigate through the week using the day tabs.
 - Click on any emoji in the schedule to edit the activity for that hour.
 - Use the Emoji Library to add or remove emojis for quick selection.
+- Explore different themes in the theme selector.
+- Analyze your time allocation using the built-in chart.
+- Share your schedule using the share feature.
 - Your changes are automatically saved in your browser's local storage.
 
 ## Building for Production
@@ -76,4 +80,5 @@ This project is published under a custom license (see LICENSE.md).
 
 - This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 - Emoji designs are provided by the Unicode Consortium.
-
+- Claude A.I. for development assistance
+- My family for support and infrastructure

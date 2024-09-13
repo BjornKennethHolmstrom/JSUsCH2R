@@ -31,18 +31,3 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - "Restore Defaults" functionality for emoji library
 - Author credit with link to personal website
 
-### Changed
-- N/A (Initial Release)
-
-### Deprecated
-- N/A (Initial Release)
-
-### Removed
-- N/A (Initial Release)
-
-### Fixed
-- N/A (Initial Release)
-
-### Security
-- N/A (Initial Release)
-
