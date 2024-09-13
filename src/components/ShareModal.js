@@ -2,17 +2,19 @@ import React, { useState, useRef, useEffect } from 'react';
 import html2canvas from 'html2canvas';
 import { useTheme } from '../themes';
 import { generateScheduleStats } from '../utils/scheduleStats';
+import { COLORS } from '../colors';
 
-const ShareModal = ({ weekSchedule, activeDay, onClose }) => {
+const ShareModal = ({ weekSchedule, activeDay, timeAllocationData, onClose }) => {
   const { theme } = useTheme();
   const [shareMessage, setShareMessage] = useState("Check out my JSUsCH²R schedule!");
   const [shareImage, setShareImage] = useState('');
   const [shareMode, setShareMode] = useState('day');
+  const [shareType, setShareType] = useState('schedule');
   const scheduleRef = useRef(null);
 
   useEffect(() => {
     generateShareableImage();
-  }, [shareMode]);
+  }, [shareMode, shareType]);
 
   const generateShareableImage = async () => {
     if (scheduleRef.current) {
@@ -24,13 +26,13 @@ const ShareModal = ({ weekSchedule, activeDay, onClose }) => {
   const handleShare = async () => {
     const stats = generateScheduleStats(shareMode === 'day' ? weekSchedule[activeDay] : Object.values(weekSchedule).flat());
     const shareData = {
-      title: `My JSUsCH²R ${shareMode === 'day' ? 'Day' : 'Week'} Schedule`,
+      title: `My JSUsCH²R ${shareMode === 'day' ? 'Day' : 'Week'} ${shareType === 'schedule' ? 'Schedule' : 'Time Allocation'}`,
       text: `${shareMessage}\n\nStats:\n• Most frequent activity: ${stats.mostFrequentActivity.name} (${stats.mostFrequentActivity.hours} hours)\n• Unique activities: ${stats.uniqueActivities}\n• Productive hours: ${stats.productiveHours}\n• Sleep hours: ${stats.sleepHours}\n\nGet JSUsCH²R: https://github.com/BjornKennethHolmstrom/JSUsCH2R`,
     };
 
     if (shareImage) {
       const blob = await (await fetch(shareImage)).blob();
-      const file = new File([blob], 'schedule.png', { type: 'image/png' });
+      const file = new File([blob], 'jsusch2r_share.png', { type: 'image/png' });
       shareData.files = [file];
     }
 
@@ -41,7 +43,7 @@ const ShareModal = ({ weekSchedule, activeDay, onClose }) => {
         // Fallback for desktop or unsupported browsers
         const tempLink = document.createElement('a');
         tempLink.href = shareImage;
-        tempLink.download = 'my_jsusch2r_schedule.png';
+        tempLink.download = 'my_jsusch2r_share.png';
         tempLink.click();
         alert('Image downloaded. You can share it manually along with the following text:\n\n' + shareData.text);
       }
@@ -50,13 +52,29 @@ const ShareModal = ({ weekSchedule, activeDay, onClose }) => {
     }
   };
 
+  const getTimeAllocationData = () => {
+    if (shareType === 'timeAllocation') {
+      return shareMode === 'day' ? timeAllocationData.daily : timeAllocationData.weekly;
+    }
+    return null;
+  };
+
   return (
     <div className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50`}>
       <div className={`${theme.modalBackground} rounded-lg p-6 max-w-md w-full`}>
-        <h2 className={`text-2xl font-semibold mb-4 ${theme.text}`}>Share Your Schedule</h2>
+        <h2 className={`text-2xl font-semibold mb-4 ${theme.text}`}>Share Your JSUsCH²R Data</h2>
         
         <div className="mb-4">
-          <label className={`block mb-2 ${theme.text}`}>Share Mode:</label>
+          <label className={`block mb-2 ${theme.text}`}>Share Type:</label>
+          <select
+            value={shareType}
+            onChange={(e) => setShareType(e.target.value)}
+            className={`w-full p-2 border rounded ${theme.input} mb-2`}
+          >
+            <option value="schedule">Schedule</option>
+            <option value="timeAllocation">Time Allocation Chart</option>
+          </select>
+
           <select
             value={shareMode}
             onChange={(e) => setShareMode(e.target.value)}
@@ -68,11 +86,17 @@ const ShareModal = ({ weekSchedule, activeDay, onClose }) => {
         </div>
 
         <div ref={scheduleRef} className={`${theme.card} p-4 rounded-lg mb-4`}>
-          <h3 className={`text-lg font-semibold mb-2 ${theme.text}`}>My JSUsCH²R {shareMode === 'day' ? 'Day' : 'Week'} Schedule</h3>
-          {shareMode === 'day' ? (
-            <DaySchedule schedule={weekSchedule[activeDay]} />
+          <h3 className={`text-lg font-semibold mb-2 ${theme.text}`}>
+            My JSUsCH²R {shareType === 'schedule' ? (shareMode === 'day' ? 'Day Schedule' : 'Week Schedule') : 'Time Allocation'}
+          </h3>
+          {shareType === 'schedule' ? (
+            shareMode === 'day' ? (
+              <DaySchedule schedule={weekSchedule[activeDay]} />
+            ) : (
+              <WeekSchedule weekSchedule={weekSchedule} />
+            )
           ) : (
-            <WeekSchedule weekSchedule={weekSchedule} />
+            <TimeAllocationChart data={getTimeAllocationData()} />
           )}
         </div>
 
@@ -87,7 +111,7 @@ const ShareModal = ({ weekSchedule, activeDay, onClose }) => {
           onClick={handleShare}
           className={`${theme.accent} ${theme.text} px-4 py-2 rounded ${theme.hover} w-full mb-4`}
         >
-          Share Schedule
+          Share
         </button>
 
         <button
@@ -100,7 +124,6 @@ const ShareModal = ({ weekSchedule, activeDay, onClose }) => {
     </div>
   );
 };
-
 const DaySchedule = ({ schedule }) => (
   <div className="grid grid-cols-6 gap-1">
     {schedule.map((item, index) => (
@@ -130,5 +153,22 @@ const WeekSchedule = ({ weekSchedule }) => (
     ))}
   </div>
 );
+
+const TimeAllocationChart = ({ data }) => {
+  if (!data || data.length === 0) {
+    return <div>No time allocation data available.</div>;
+  }
+
+  return (
+    <div>
+      {data.map((item, index) => (
+        <div key={index} className="flex items-center mb-1">
+          <div className="w-4 h-4 mr-2" style={{ backgroundColor: COLORS[index % COLORS.length] }}></div>
+          <span>{item.name}: {item.value}h ({item.percentage}%)</span>
+        </div>
+      ))}
+    </div>
+  );
+};
 
 export default ShareModal;

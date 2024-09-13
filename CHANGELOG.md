@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.5] - 2024-09-19
+### Added
+- Ability to share time allocation chart alongside schedule
+- New TimeAllocationChart component for visual representation of time data
+- Support for both daily and weekly time allocation data in ShareModal
+
+### Changed
+- COLORS import across relevant components
+
 ## [1.1.4] - 2024-09-16
 ### Added
 - Restored help button for the Emoji Library

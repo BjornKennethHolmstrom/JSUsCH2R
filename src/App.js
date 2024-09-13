@@ -105,6 +105,7 @@ const App = () => {
   const [hasSeenTooltip, setHasSeenTooltip] = useLocalStorage('jsusch2r-has-seen-tooltip', false);
   const [activeDay, setActiveDay] = useState('Mon');
   const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
+  const [timeAllocationData, setTimeAllocationData] = useState(null);
 
   const handleDayScheduleUpdate = (day, newDaySchedule) => {
     setWeekSchedule(prevWeekSchedule => ({
@@ -148,6 +149,31 @@ const App = () => {
     setHasSeenTooltip(true);
   };
 
+  const generateTimeAllocationData = (mode = 'week') => {
+    const scheduleToAnalyze = mode === 'week' ? Object.values(weekSchedule).flat() : weekSchedule[activeDay];
+    const analysis = {};
+    scheduleToAnalyze.forEach(item => {
+      if (analysis[item.activity]) {
+        analysis[item.activity] += 1;
+      } else {
+        analysis[item.activity] = 1;
+      }
+    });
+
+    return Object.entries(analysis).map(([activity, hours]) => ({
+      name: activity,
+      value: hours,
+      percentage: (hours / (mode === 'week' ? 168 : 24) * 100).toFixed(1)
+    }));
+  };
+
+  const handleOpenShareModal = () => {
+    const weeklyData = generateTimeAllocationData('week');
+    const dailyData = generateTimeAllocationData('day');
+    setTimeAllocationData({ weekly: weeklyData, daily: dailyData });
+    setIsShareModalOpen(true);
+  };
+
   return (
     <div className={`min-h-screen ${theme.background} ${theme.text} p-2 sm:p-4 flex flex-col`}>
       <div className="flex-grow max-w-4xl mx-auto w-full">
@@ -174,6 +200,10 @@ const App = () => {
         <TimeAllocationAnalysis 
           weekSchedule={weekSchedule}
           activeDay={activeDay}
+          onShare={(imageDataUrl, mode, data) => {
+            setTimeAllocationData({ imageDataUrl, mode, data });
+            setIsShareModalOpen(true);
+          }}
         />
         <EmojiLibrary
           emojiLibrary={emojiLibrary}
@@ -182,27 +212,24 @@ const App = () => {
           onRestoreDefaults={() => setEmojiLibrary(defaultEmojiLibrary)}
         />
         <button
-          onClick={() => setIsShareModalOpen(true)}
+          onClick={handleOpenShareModal}
           className={`${theme.accent} ${theme.text} px-4 py-2 rounded ${theme.hover} mt-4`}
         >
           Share My Schedule
         </button>
-        {editingDay && editingIndex !== null && (
-          <EditPopup
-            emoji={weekSchedule[editingDay][editingIndex].emoji}
-            activity={weekSchedule[editingDay][editingIndex].activity}
-            emojiLibrary={emojiLibrary}
-            onSave={handleEditSave}
-            onClose={() => {
-              setEditingDay(null);
-              setEditingIndex(null);
-            }}
+        {isShareModalOpen && (
+          <ShareModal
+            weekSchedule={weekSchedule}
+            activeDay={activeDay}
+            timeAllocationData={timeAllocationData}
+            onClose={() => setIsShareModalOpen(false)}
           />
         )}
         {isShareModalOpen && (
           <ShareModal
             weekSchedule={weekSchedule}
             activeDay={activeDay}
+            timeAllocationData={timeAllocationData}
             onClose={() => setIsShareModalOpen(false)}
           />
         )}
