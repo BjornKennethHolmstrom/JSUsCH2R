@@ -212,7 +212,7 @@ const App = () => {
       </div>
       <div className="text-center mt-4">
         <a 
-          href="https://github.com/bjornkj/JSUsCH2R" 
+          href="https://bjornkennethholmstrom.wordpress.com/jsusch2r/" 
           target="_blank" 
           rel="noopener noreferrer" 
           className={`text-sm ${theme.text} hover:underline block`}

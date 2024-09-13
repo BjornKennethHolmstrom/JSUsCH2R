@@ -1,8 +1,8 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
 const themes = {
-  default: {
-    name: 'Björn',
+  bjorn: {
+    name: 'BKH',
     background: 'bg-[#7FD4F5]',
     text: 'text-gray-800',
     card: 'bg-white',
@@ -140,7 +140,7 @@ export const useTheme = () => useContext(ThemeContext);
 export const ThemeProvider = ({ children }) => {
   const [currentTheme, setCurrentTheme] = useState(() => {
     const savedTheme = localStorage.getItem('jsusch2r-theme');
-    return savedTheme && themes[savedTheme] ? savedTheme : 'dark';
+    return savedTheme && themes[savedTheme] ? savedTheme : 'bjorn';
   });
 
   useEffect(() => {
