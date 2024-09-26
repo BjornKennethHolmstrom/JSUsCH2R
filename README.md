@@ -19,7 +19,9 @@ Created by [Björn Kenneth Holmström](https://bjornkennethholmstrom.wordpress.c
 - Help modal for easy onboarding
 - Responsive design for various screen sizes
 - PWA support for mobile-friendly usage
-- Persistent local storage of schedule and preferences
+- Persistent storage of schedule and preferences
+- Ability to reset/delete libraries
+- Improved error handling and user feedback
 
 ## Getting Started
 
@@ -46,7 +48,12 @@ Created by [Björn Kenneth Holmström](https://bjornkennethholmstrom.wordpress.c
    npm start
    ```
 
-4. Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+4. In a separate terminal, start the API server:
+   ```
+   node server/jsusch2r.js
+   ```
+
+5. Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
 
 ## Usage
 
@@ -56,7 +63,8 @@ Created by [Björn Kenneth Holmström](https://bjornkennethholmstrom.wordpress.c
 - Explore different themes in the theme selector.
 - Analyze your time allocation using the built-in chart.
 - Share your schedule using the share feature.
-- Your changes are automatically saved in your browser's local storage.
+- Reset or delete your library if needed.
+- Your changes are automatically saved to the server.
 
 ## Building for Production
 
@@ -67,6 +75,12 @@ npm run build
 ```
 
 This will create a `build` directory with optimized production-ready files.
+
+For deployment to GitHub Pages, run:
+
+```
+npm run deploy
+```
 
 ## Contributing
 

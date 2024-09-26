@@ -4,12 +4,34 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+# Changelog
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [1.2.0] - 2024-09-27
+### Added
+- Ability to reset/delete the current library
+- Name input field in the introduction popup for new libraries
+- Server-side API for schedule library management
+- Improved error handling and user feedback throughout the application
+
+### Changed
+- Updated app initialization process to prevent duplicate library creation
+- Improved sharing functionality with better mobile support
+
+### Fixed
+- Resolved issues with edit popups not appearing when clicking on emojis
+- Fixed API endpoint implementation for public library search and emoji library merging
+
 ## [1.1.6] - 2024-09-20
 ### Added
 - Compact view for schedule sharing on mobile devices
 
 ### Fixed
 - Addressed issue with schedule image appearance when sharing on mobile devices
+
 ## [1.1.5] - 2024-09-19
 ### Added
 - Ability to share time allocation chart alongside schedule
