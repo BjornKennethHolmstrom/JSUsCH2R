@@ -56,8 +56,8 @@ const TimeAllocationAnalysis = ({ weekSchedule, activeDay, onShare }) => {
   }
 
   return (
-    <div className={`mt-8 ${theme.card} rounded-lg shadow-lg p-6 max-w-2xl mx-auto`}>
-      <div className="flex justify-between items-center mb-4">
+    <div className={`mt-12 ${theme.card} rounded-lg shadow-lg p-6 max-w-2xl mx-auto`}>
+      <div className="flex justify-between items-center mb-6">
         <h2 className={`text-2xl font-semibold ${theme.text}`}>Time Allocation Analysis</h2>
         <div className="flex items-center">
           <select
@@ -77,14 +77,14 @@ const TimeAllocationAnalysis = ({ weekSchedule, activeDay, onShare }) => {
         </div>
       </div>
       <div className="flex flex-col" ref={chartRef}>
-        <div className="w-full h-64 mb-4">
+        <div className="w-full h-80 mb-8">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie
                 data={data}
                 cx="50%"
                 cy="50%"
-                outerRadius={100}
+                outerRadius={120}
                 fill="#8884d8"
                 dataKey="value"
                 label={({ name, percentage }) => `${name} ${percentage}%`}
@@ -97,8 +97,8 @@ const TimeAllocationAnalysis = ({ weekSchedule, activeDay, onShare }) => {
             </PieChart>
           </ResponsiveContainer>
         </div>
-        <div className="w-full">
-          <ul className={`${theme.text} grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2`}>
+        <div className="w-full mt-4">
+          <ul className={`${theme.text} grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4`}>
             {data.map((item, index) => (
               <li key={index} className="flex items-center">
                 <span className="inline-block w-4 h-4 mr-2 flex-shrink-0" style={{ backgroundColor: COLORS[index % COLORS.length] }}></span>

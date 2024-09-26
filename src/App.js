@@ -135,6 +135,14 @@ const App = () => {
     }
   };
 
+  const handleUpdateEmoji = (oldEmoji, newEmoji, newActivity) => {
+    setEmojiLibrary(prevLibrary => 
+      prevLibrary.map(item => 
+        item.emoji === oldEmoji ? { emoji: newEmoji, activity: newActivity } : item
+      )
+    );
+  };
+
   const handleRemoveEmoji = (emoji) => {
     setEmojiLibrary(emojiLibrary.filter(item => item.emoji !== emoji));
   };
@@ -209,6 +217,7 @@ const App = () => {
           emojiLibrary={emojiLibrary}
           onAddEmoji={handleAddEmoji}
           onRemoveEmoji={handleRemoveEmoji}
+          onUpdateEmoji={handleUpdateEmoji}
           onRestoreDefaults={() => setEmojiLibrary(defaultEmojiLibrary)}
         />
         <button
