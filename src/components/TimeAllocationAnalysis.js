@@ -43,14 +43,6 @@ const TimeAllocationAnalysis = ({ weekSchedule, activeDay, onShare }) => {
     return null;
   };
 
-  const handleShare = async () => {
-    if (chartRef.current) {
-      const canvas = await html2canvas(chartRef.current);
-      const imageDataUrl = canvas.toDataURL('image/png');
-      onShare(imageDataUrl, analysisMode, data);
-    }
-  };
-
   if (!data || data.length === 0) {
     return <div className={`${theme.text}`}>No data available for analysis.</div>;
   }
@@ -68,12 +60,6 @@ const TimeAllocationAnalysis = ({ weekSchedule, activeDay, onShare }) => {
             <option value="week">Weekly</option>
             <option value="day">Daily</option>
           </select>
-          <button
-            onClick={handleShare}
-            className={`${theme.accent} ${theme.text} px-4 py-2 rounded ${theme.hover}`}
-          >
-            Share Chart
-          </button>
         </div>
       </div>
       <div className="flex flex-col" ref={chartRef}>

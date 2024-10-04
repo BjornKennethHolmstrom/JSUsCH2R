@@ -1,3 +1,4 @@
+import { useTheme } from './themes';
 import React, { useState, useEffect } from 'react';
 import JSUsCH2R from './components/JSUsCH2R';
 import EmojiLibrary from './components/EmojiLibrary';
@@ -9,8 +10,10 @@ import WeeklySchedule from './components/WeeklySchedule';
 import ScheduleLibrarySharing from './components/ScheduleLibrarySharing';
 import Notification from './components/Notification';
 import HelpModal from './components/HelpModal';
-import { useTheme } from './themes';
+import Auth from './components/Auth';
 import { saveScheduleLibrary, getScheduleLibrary, updateLibraryName } from './services/api';
+import { getEmojiLibraries, getSchedules, createSchedule, updateSchedule } from './services/api';
+import { initDB, saveToIndexedDB, getFromIndexedDB } from './utils/indexedDB';
 
 const useLocalStorage = (key, initialValue) => {
   const [storedValue, setStoredValue] = useState(() => {
@@ -115,9 +118,35 @@ const App = () => {
   const [showIntro, setShowIntro] = useState(false);
   const [introLibraryName, setIntroLibraryName] = useState('My Schedule Library');
   const [isLoading, setIsLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [userId, setUserId] = useState(null);
+  const [userLibraries, setUserLibraries] = useState([]);
+  const [userSchedules, setUserSchedules] = useState([]);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [visibility, setVisibility] = useState('private');
+  const [sharedWith, setSharedWith] = useState([]);
 
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    const storedUserId = localStorage.getItem('userId');
+    if (token && storedUserId) {
+      setIsAuthenticated(true);
+      setUserId(storedUserId);
+    }
+  }, []);
 
-
+  useEffect(() => {
+    const loadData = async () => {
+      if (!isAuthenticated) {
+        const localData = await getFromIndexedDB();
+        if (localData.length > 0) {
+          setWeekSchedule(localData[0].weekSchedule);
+          setEmojiLibrary(localData[0].emojiLibrary);
+        }
+      }
+    };
+    loadData();
+  }, [isAuthenticated]);
 
   useEffect(() => {
     const initializeLibrary = async () => {
@@ -138,6 +167,67 @@ const App = () => {
 
     initializeLibrary();
   }, []);
+
+  const fetchUserData = async () => {
+    try {
+      const libraries = await getEmojiLibraries();
+      setUserLibraries(libraries);
+      const schedules = await getSchedules();
+      setUserSchedules(schedules);
+      if (schedules.length > 0) {
+        setWeekSchedule(JSON.parse(schedules[0].week_data));
+        setCurrentLibraryId(schedules[0].library_id);
+      }
+    } catch (error) {
+      console.error('Error fetching user data:', error);
+      showNotification(error.message, 'error');
+    }
+  };
+
+  const handleLogin = (userData) => {
+    setIsAuthenticated(true);
+    if (userData.userId) {
+      setUserId(userData.userId);
+    }
+    fetchUserData();
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('userId');
+    setIsAuthenticated(false);
+    setUserId(null);
+  };
+
+  const handleLocalSave = () => {
+    localStorage.setItem('jsusch2r-week-schedule', JSON.stringify(weekSchedule));
+    localStorage.setItem('jsusch2r-emoji-library', JSON.stringify(emojiLibrary));
+    showNotification('Schedule saved locally');
+  };
+
+  const handleSaveSchedule = async () => {
+    if (isAuthenticated) {
+      try {
+        if (currentLibraryId) {
+          if (userSchedules.length > 0) {
+            await updateSchedule(userSchedules[0].id, currentLibraryId, weekSchedule);
+          } else {
+            await createSchedule(currentLibraryId, weekSchedule);
+          }
+          showNotification('Schedule saved successfully');
+          fetchUserData();
+        } else {
+          showNotification('Please select an emoji library first', 'error');
+        }
+      } catch (error) {
+        console.error('Error saving schedule:', error);
+        showNotification(error.message, 'error');
+      }
+    } else {
+      await saveToIndexedDB({ weekSchedule, emojiLibrary });
+      showNotification('Schedule saved locally');
+    }
+  };
 
   const showNotification = (message, type = 'success') => {
     setNotification({ message, type });
@@ -227,11 +317,16 @@ const App = () => {
     }
   };
 
-  const handleLoadSharedLibrary = (library) => {
-    setWeekSchedule(library.schedule);
-    setEmojiLibrary(library.emojiLibrary);
-    setCurrentLibraryName(library.name);
-    showNotification('Shared library loaded successfully');
+  const handleLoadSharedLibrary = (shared) => {
+    if (shared.schedule) {
+      setWeekSchedule(JSON.parse(shared.schedule.week_data));
+      setCurrentLibraryName(shared.schedule.name);
+      showNotification('Shared schedule loaded successfully');
+    }
+    if (shared.library) {
+      setEmojiLibrary(JSON.parse(shared.library.emojis));
+      showNotification('Shared emoji library loaded successfully');
+    }
   };
 
   const handleMergeEmojis = (newEmojiLibrary) => {
@@ -320,22 +415,23 @@ const App = () => {
       <div className="flex-grow max-w-4xl mx-auto w-full">
         <div className="flex justify-between items-center mb-4">
           <ThemeSelector />
-          <div className="flex items-center">
-            <input
-              type="text"
-              value={currentLibraryName}
-              onChange={(e) => setCurrentLibraryName(e.target.value)}
-              onBlur={() => handleUpdateLibraryName(currentLibraryName)}
-              className={`${theme.input} px-2 py-1 rounded mr-2`}
-            />
+          {isAuthenticated ? (
             <button
-              onClick={() => handleUpdateLibraryName(currentLibraryName)}
+              onClick={handleLogout}
               className={`${theme.accent} ${theme.text} px-4 py-2 rounded ${theme.hover}`}
             >
-              Update Name
+              Logout
             </button>
-          </div>
+          ) : (
+            <button
+              onClick={() => setShowAuthModal(true)}
+              className={`${theme.accent} ${theme.text} px-4 py-2 rounded ${theme.hover}`}
+            >
+              Login / Register
+            </button>
+          )}
         </div>
+        
         <WeeklySchedule
           weekSchedule={weekSchedule}
           onDayScheduleUpdate={handleDayScheduleUpdate}
@@ -346,7 +442,13 @@ const App = () => {
           onOpenHelpModal={() => setIsHelpModalOpen(true)}
           onActiveDayChange={setActiveDay}
           activeDay={activeDay}
+          isAuthenticated={isAuthenticated}
+          visibility={visibility}
+          setVisibility={setVisibility}
+          sharedWith={sharedWith}
+          setSharedWith={setSharedWith}
         />
+        
         <TimeAllocationAnalysis 
           weekSchedule={weekSchedule}
           activeDay={activeDay}
@@ -355,13 +457,20 @@ const App = () => {
             setIsShareModalOpen(true);
           }}
         />
+        
         <EmojiLibrary
           emojiLibrary={emojiLibrary}
           onAddEmoji={handleAddEmoji}
           onRemoveEmoji={handleRemoveEmoji}
           onUpdateEmoji={handleUpdateEmoji}
           onRestoreDefaults={() => setEmojiLibrary(defaultEmojiLibrary)}
+          isAuthenticated={isAuthenticated}
+          visibility={visibility}
+          setVisibility={setVisibility}
+          sharedWith={sharedWith}
+          setSharedWith={setSharedWith}
         />
+                
         <ScheduleLibrarySharing
           currentLibraryId={currentLibraryId}
           currentLibraryName={currentLibraryName}
@@ -369,45 +478,62 @@ const App = () => {
           onMergeEmojis={handleMergeEmojis}
           showNotification={showNotification}
           onResetLibrary={handleResetLibrary}
+          weekSchedule={weekSchedule}
+          emojiLibrary={emojiLibrary}
+          isAuthenticated={isAuthenticated}
+          visibility={visibility}
+          setVisibility={setVisibility}
+          sharedWith={sharedWith}
+          setSharedWith={setSharedWith}
         />
+        
         <button
-          onClick={handleOpenShareModal}
+          onClick={isAuthenticated ? handleSaveSchedule : handleLocalSave}
           className={`${theme.accent} ${theme.text} px-4 py-2 rounded ${theme.hover} mt-4`}
         >
-          Share My Schedule as Image
+          {isAuthenticated ? 'Save Schedule' : 'Save Locally'}
         </button>
-        {isShareModalOpen && (
-          <ShareModal
-            weekSchedule={weekSchedule}
-            activeDay={activeDay}
-            timeAllocationData={timeAllocationData}
-            onClose={() => setIsShareModalOpen(false)}
-          />
-        )}
-        {editingDay !== null && editingIndex !== null && (
-          <EditPopup
-            emoji={weekSchedule[editingDay][editingIndex].emoji}
-            activity={weekSchedule[editingDay][editingIndex].activity}
-            emojiLibrary={emojiLibrary}
-            onSave={handleEditSave}
-            onClose={() => {
-              setEditingDay(null);
-              setEditingIndex(null);
-            }}
-          />
-        )}
-        {isShareModalOpen && (
-          <ShareModal
-            weekSchedule={weekSchedule}
-            activeDay={activeDay}
-            timeAllocationData={timeAllocationData}
-            onClose={() => setIsShareModalOpen(false)}
-          />
-        )}
-        {isHelpModalOpen && (
-          <HelpModal onClose={() => setIsHelpModalOpen(false)} />
+        
+        {isAuthenticated && (
+          <button
+            onClick={handleOpenShareModal}
+            className={`${theme.accent} ${theme.text} px-4 py-2 rounded ${theme.hover} mt-4 ml-4`}
+          >
+            Share My Schedule as Image
+          </button>
         )}
       </div>
+
+      {editingDay !== null && editingIndex !== null && (
+        <EditPopup
+          emoji={weekSchedule[editingDay][editingIndex].emoji}
+          activity={weekSchedule[editingDay][editingIndex].activity}
+          emojiLibrary={emojiLibrary}
+          onSave={handleEditSave}
+          onClose={() => {
+            setEditingDay(null);
+            setEditingIndex(null);
+          }}
+        />
+      )}
+
+      {isShareModalOpen && (
+        <ShareModal
+          weekSchedule={weekSchedule}
+          activeDay={activeDay}
+          timeAllocationData={timeAllocationData}
+          onClose={() => setIsShareModalOpen(false)}
+        />
+      )}
+
+      {isHelpModalOpen && (
+        <HelpModal onClose={() => setIsHelpModalOpen(false)} />
+      )}
+
+      {showAuthModal && (
+        <Auth onLogin={handleLogin} onClose={() => setShowAuthModal(false)} />
+      )}
+
       <div className="text-center mt-4">
         <a 
           href="https://bjornkennethholmstrom.wordpress.com/jsusch2r/" 
@@ -426,6 +552,7 @@ const App = () => {
           Donate to support
         </a>
       </div>
+
       {notification && (
         <Notification
           message={notification.message}
