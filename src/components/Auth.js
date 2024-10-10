@@ -3,6 +3,8 @@
 import React, { useState } from 'react';
 import { register, login } from '../services/api';
 import { useTheme } from '../themes';
+import { getFromIndexedDB } from '../utils/indexedDB';
+import { saveData } from '../services/api';
 
 const Auth = ({ onLogin, onClose }) => {
   const [isLogin, setIsLogin] = useState(true);
@@ -22,14 +24,29 @@ const Auth = ({ onLogin, onClose }) => {
         await register(email, password);
         userData = await login(email, password);
       }
+
       if (userData.token) {
+        // For both login and register, we'll try to migrate local data
+        const localData = await getFromIndexedDB();
+        if (localData) {
+          try {
+            await saveData(localData, 'server');
+            console.log('Local data migrated successfully');
+          } catch (migrationError) {
+            console.error('Error migrating local data:', migrationError);
+            // We don't want to stop the login process if migration fails
+            // but we might want to inform the user
+            setError('Logged in successfully, but there was an issue migrating your local data.');
+          }
+        }
+
         onLogin(userData);
         onClose();
       } else {
-        setError('Login failed. Please try again.');
+        setError(isLogin ? 'Login failed. Please try again.' : 'Registration successful, but login failed. Please try logging in.');
       }
     } catch (err) {
-      setError(err.message || 'An error occurred. Please try again.');
+      setError(err.message || `An error occurred during ${isLogin ? 'login' : 'registration'}. Please try again.`);
     }
   };
 

@@ -1,4 +1,5 @@
 // src/services/api.js
+import { saveToIndexedDB, getFromIndexedDB } from '../utils/indexedDB';
 
 const API_BASE_URL = process.env.NODE_ENV === 'production'
   ? 'https://your-api-server-url.com/api'
@@ -9,13 +10,13 @@ async function handleResponse(response) {
   if (contentType && contentType.indexOf("application/json") !== -1) {
     const data = await response.json();
     if (!response.ok) {
-      throw new Error(data.error || 'An unexpected error occurred');
+      throw new Error(data.error || `HTTP error! status: ${response.status}`);
     }
     return data;
   } else {
     const text = await response.text();
     console.error('Received non-JSON response:', text);
-    throw new Error('Received non-JSON response from server');
+    throw new Error(`Received non-JSON response: ${text}`);
   }
 }
 
@@ -101,14 +102,6 @@ export const mergeEmojiLibraries = async (sourceId, targetId) => {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ sourceId, targetId }),
-  });
-};
-
-export const saveScheduleLibrary = async (library) => {
-  return request('/schedule-library', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(library),
   });
 };
 
@@ -204,3 +197,32 @@ export const getPublicEmojiLibrary = async (uniqueId) => {
 export async function getPublicEmojiLibraries(searchTerm = '') {
   return request(`/emoji-libraries/public?search=${encodeURIComponent(searchTerm)}`);
 }
+
+export const getData = async (dataSource) => {
+  if (dataSource === 'local') {
+    return getFromIndexedDB();
+  } else {
+    // Use an existing endpoint or create a new one
+    return request('/user-data');
+  }
+};
+
+export const saveData = async (data, dataSource) => {
+  if (dataSource === 'local') {
+    return saveToIndexedDB(data);
+  } else {
+    // Use an existing endpoint or create a new one
+    return request('/user-data', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+};
+
+// Update saveScheduleLibrary function
+export const saveScheduleLibrary = async (library) => {
+  return request('/schedules', {
+    method: 'POST',
+    body: JSON.stringify(library),
+  });
+};

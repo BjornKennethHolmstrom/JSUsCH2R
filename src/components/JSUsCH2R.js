@@ -15,7 +15,7 @@ const JSUsCH2R = ({ schedule, onEmojiClick, onScheduleUpdate, showTimeLabels, ac
 
   const currentHour = currentTime.getHours();
   const currentDay = currentTime.toLocaleString('en-US', {weekday: 'short'});
-  const currentEmoji = schedule[currentHour]?.emoji || '⏺';
+  const currentEmoji = schedule && schedule[currentHour] ? schedule[currentHour].emoji : '⏺';
 
   const formatHourRange = (index) => {
     const start = index.toString().padStart(2, '0');
@@ -27,12 +27,17 @@ const JSUsCH2R = ({ schedule, onEmojiClick, onScheduleUpdate, showTimeLabels, ac
     return currentDay === activeDay && index === currentHour;
   };
 
+  // Ensure schedule is an array with 24 items
+  const safeSchedule = Array.isArray(schedule) && schedule.length === 24
+    ? schedule
+    : Array(24).fill({ emoji: '⏺', activity: 'Not set' });
+
   return (
     <div className={`flex flex-col items-center justify-center ${theme.text}`}>
       <div className="text-6xl mb-4">{currentEmoji}</div>
       <p className="text-xl mb-4">Current Time: {currentTime.toLocaleTimeString()}</p>
       <div className="grid grid-cols-6 gap-2">
-        {schedule.map((item, index) => (
+        {safeSchedule.map((item, index) => (
           <div key={index} className="flex flex-col items-center">
             <button 
               className={`text-2xl p-2 rounded ${isCurrentTimeSlot(index) ? theme.accent : theme.emojiBg} ${theme.hover}`}

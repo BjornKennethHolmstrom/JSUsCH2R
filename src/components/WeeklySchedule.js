@@ -4,6 +4,7 @@ import JSUsCH2R from './JSUsCH2R';
 import { Lock, Share2, Users } from 'lucide-react';
 import { useSwipeable } from 'react-swipeable';
 import { saveSchedule, getSchedule, getSchedules, getPublicSchedules } from '../services/api';
+import Notification from './Notification';
 
 const WeeklySchedule = ({ 
   weekSchedule, 
@@ -37,8 +38,10 @@ const WeeklySchedule = ({
   }, [showTimeLabels]);
 
   useEffect(() => {
-    if (isAuthenticated) {
+    if (isAuthenticated && userId) {
       fetchUserSchedules();
+    } else if (process.env.NODE_ENV === 'development') {
+      console.log('User not authenticated or user ID is undefined, skipping fetch');
     }
   }, [isAuthenticated, userId]);
 
@@ -55,16 +58,12 @@ const WeeklySchedule = ({
   }, [activeDay, onActiveDayChange]);
 
   const fetchUserSchedules = async () => {
-    if (!isAuthenticated || !userId) {
-      console.warn('User not authenticated or user ID is undefined, skipping fetch');
-      return;
-    }
     try {
       const userSchedules = await getSchedules(userId);
-      setSchedules(userSchedules);
+      // Handle the fetched schedules
     } catch (error) {
       console.error('Error fetching user schedules:', error);
-      // You could add a notification here if you have a notification system
+      Notification('Failed to fetch schedules', 'error');
     }
   };
 
@@ -249,7 +248,7 @@ const WeeklySchedule = ({
           </button>
         </div>
         <JSUsCH2R
-          schedule={weekSchedule[activeDay]}
+          schedule={weekSchedule[activeDay] || []}
           onEmojiClick={handleEmojiClick}
           onScheduleUpdate={(newSchedule) => onDayScheduleUpdate(activeDay, newSchedule)}
           showTimeLabels={showTimeLabels}

@@ -11,9 +11,11 @@ import ScheduleLibrarySharing from './components/ScheduleLibrarySharing';
 import Notification from './components/Notification';
 import HelpModal from './components/HelpModal';
 import Auth from './components/Auth';
+import { generateUniqueId } from './utils/idGenerator';
 import { saveScheduleLibrary, getScheduleLibrary, updateLibraryName } from './services/api';
 import { getEmojiLibraries, getSchedules, createSchedule, updateSchedule } from './services/api';
 import { initDB, saveToIndexedDB, getFromIndexedDB } from './utils/indexedDB';
+import { saveData, getData } from './services/api';
 
 const useLocalStorage = (key, initialValue) => {
   const [storedValue, setStoredValue] = useState(() => {
@@ -102,7 +104,10 @@ const decodeString = (str) => {
 };
 
 const App = () => {
-  const [weekSchedule, setWeekSchedule] = useLocalStorage('jsusch2r-week-schedule', defaultWeekSchedule);
+  const [weekSchedule, setWeekSchedule] = useState(() => {
+    const savedSchedule = localStorage.getItem('jsusch2r-week-schedule');
+    return savedSchedule ? JSON.parse(savedSchedule) : defaultWeekSchedule;
+  });
   const [emojiLibrary, setEmojiLibrary] = useLocalStorage('jsusch2r-emoji-library', defaultEmojiLibrary);
   const [editingDay, setEditingDay] = useState(null);
   const [editingIndex, setEditingIndex] = useState(null);
@@ -119,6 +124,7 @@ const App = () => {
   const [introLibraryName, setIntroLibraryName] = useState('My Schedule Library');
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [dataSource, setDataSource] = useState('local');
   const [userId, setUserId] = useState(null);
   const [userLibraries, setUserLibraries] = useState([]);
   const [userSchedules, setUserSchedules] = useState([]);
@@ -132,23 +138,39 @@ const App = () => {
     if (token && storedUserId) {
       setIsAuthenticated(true);
       setUserId(storedUserId);
+      setDataSource('server');
+    } else {
+      setIsAuthenticated(false);
+      setUserId(null);
+      setDataSource('local');
     }
   }, []);
 
   useEffect(() => {
     const loadData = async () => {
-      if (!isAuthenticated) {
-        const localData = await getFromIndexedDB();
-        if (localData.length > 0) {
-          setWeekSchedule(localData[0].weekSchedule);
-          setEmojiLibrary(localData[0].emojiLibrary);
+      setIsLoading(true);
+      try {
+        const data = await getData(dataSource);
+        if (data) {
+          setWeekSchedule(data.weekSchedule || defaultWeekSchedule);
+          setEmojiLibrary(data.emojiLibrary || defaultEmojiLibrary);
+          setCurrentLibraryId(data.currentLibraryId || null);
+          setCurrentLibraryName(data.currentLibraryName || '');
+        } else {
+          setShowIntro(true);
         }
+      } catch (error) {
+        console.error('Error loading data:', error);
+        showNotification('Failed to load data', 'error');
+        setShowIntro(true);
       }
+      setIsLoading(false);
     };
-    loadData();
-  }, [isAuthenticated]);
 
-  useEffect(() => {
+    loadData();
+  }, [dataSource]);
+
+  /*useEffect(() => {
     const initializeLibrary = async () => {
       setIsLoading(true);
       const savedLibraryId = localStorage.getItem('currentLibraryId');
@@ -166,7 +188,24 @@ const App = () => {
     };
 
     initializeLibrary();
-  }, []);
+  }, []);*/
+
+
+  const handleSave = async () => {
+    try {
+      const dataToSave = {
+        weekSchedule,
+        emojiLibrary,
+        currentLibraryId,
+        currentLibraryName
+      };
+      await saveData(dataToSave, dataSource);
+      showNotification('Data saved successfully');
+    } catch (error) {
+      console.error('Error saving data:', error);
+      showNotification('Failed to save data', 'error');
+    }
+  };
 
   const fetchUserData = async () => {
     try {
@@ -184,25 +223,69 @@ const App = () => {
     }
   };
 
-  const handleLogin = (userData) => {
+  const handleLogin = async (userData) => {
     setIsAuthenticated(true);
-    if (userData.userId) {
-      setUserId(userData.userId);
+    setUserId(userData.userId);
+    setDataSource('server');
+    localStorage.setItem('token', userData.token);
+    localStorage.setItem('userId', userData.userId);
+    
+    try {
+      // Migrate local data to server
+      const localData = await getFromIndexedDB();
+      if (localData) {
+        await saveData(localData, 'server');
+      }
+
+      // Fetch user data from server
+      const serverData = await getData('server');
+      if (serverData) {
+        setWeekSchedule(serverData.weekSchedule || defaultWeekSchedule);
+        setEmojiLibrary(serverData.emojiLibrary || defaultEmojiLibrary);
+        setCurrentLibraryId(serverData.currentLibraryId || null);
+        setCurrentLibraryName(serverData.currentLibraryName || '');
+      }
+      showNotification('Logged in successfully');
+    } catch (error) {
+      console.error('Error during login process:', error);
+      showNotification(`Login successful, but there was an error migrating or fetching data: ${error.message}`, 'warning');
     }
-    fetchUserData();
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('userId');
     setIsAuthenticated(false);
     setUserId(null);
+    setDataSource('local');
+    localStorage.removeItem('token');
+    localStorage.removeItem('userId');
+    // Reset to default or last saved local data
+    loadLocalData();
   };
 
   const handleLocalSave = () => {
     localStorage.setItem('jsusch2r-week-schedule', JSON.stringify(weekSchedule));
     localStorage.setItem('jsusch2r-emoji-library', JSON.stringify(emojiLibrary));
     showNotification('Schedule saved locally');
+  };
+
+  const loadLocalData = async () => {
+    try {
+      const localData = await getFromIndexedDB();
+      if (localData) {
+        setWeekSchedule(localData.weekSchedule || defaultWeekSchedule);
+        setEmojiLibrary(localData.emojiLibrary || defaultEmojiLibrary);
+        setCurrentLibraryId(localData.currentLibraryId || null);
+        setCurrentLibraryName(localData.currentLibraryName || '');
+      } else {
+        setWeekSchedule(defaultWeekSchedule);
+        setEmojiLibrary(defaultEmojiLibrary);
+        setCurrentLibraryId(null);
+        setCurrentLibraryName('');
+      }
+    } catch (error) {
+      console.error('Error loading local data:', error);
+      showNotification('Failed to load local data', 'error');
+    }
   };
 
   const handleSaveSchedule = async () => {
@@ -233,36 +316,47 @@ const App = () => {
     setNotification({ message, type });
   };
 
-  const createNewLibrary = async (name = 'My Schedule Library') => {
+  const handleCreateNewLibrary = async (name = 'My Schedule Library') => {
     const newLibrary = {
       name,
-      schedule: weekSchedule,
-      emojiLibrary: emojiLibrary,
+      weekSchedule,
+      emojiLibrary,
     };
-    try {
-      const { id, name: savedName } = await saveScheduleLibrary(newLibrary);
-      setCurrentLibraryId(id);
-      setCurrentLibraryName(savedName);
-      localStorage.setItem('currentLibraryId', id);
-      showNotification('New library created successfully');
-    } catch (error) {
-      console.error('Error creating new library:', error);
-      showNotification(error.message, 'error');
+    
+    if (dataSource === 'server') {
+      try {
+        const { id, name: savedName } = await saveScheduleLibrary(newLibrary);
+        setCurrentLibraryId(id);
+        setCurrentLibraryName(savedName);
+        showNotification('New library created successfully');
+      } catch (error) {
+        console.error('Error creating new library:', error);
+        showNotification('Failed to create new library on server', 'error');
+      }
+    } else {
+      setCurrentLibraryId(generateUniqueId()); // Implement this function
+      setCurrentLibraryName(name);
     }
+    
+    handleSave();
   };
 
-  const loadLibrary = async (id) => {
-    try {
-      const library = await getScheduleLibrary(id);
-      setWeekSchedule(library.schedule);
-      setEmojiLibrary(library.emojiLibrary);
-      setCurrentLibraryName(library.name);
-      setCurrentLibraryId(id);
-      showNotification('Library loaded successfully');
-    } catch (error) {
-      console.error('Error loading library:', error);
-      showNotification(error.message, 'error');
-      throw error; // Propagate the error
+  const handleLoadLibrary = async (id) => {
+    if (dataSource === 'server') {
+      try {
+        const library = await getScheduleLibrary(id);
+        setWeekSchedule(library.schedule);
+        setEmojiLibrary(library.emojiLibrary);
+        setCurrentLibraryName(library.name);
+        setCurrentLibraryId(id);
+        showNotification('Library loaded successfully');
+      } catch (error) {
+        console.error('Error loading library:', error);
+        showNotification('Failed to load library from server', 'error');
+      }
+    } else {
+      // For local storage, you might need to implement a way to store multiple libraries
+      showNotification('Loading libraries is only available for logged-in users', 'info');
     }
   };
 
@@ -307,14 +401,17 @@ const App = () => {
   };
 
   const handleUpdateLibraryName = async (newName) => {
-    try {
-      await updateLibraryName(currentLibraryId, newName);
-      setCurrentLibraryName(newName);
-      showNotification('Library name updated successfully');
-    } catch (error) {
-      console.error('Error updating library name:', error);
-      showNotification(error.message, 'error');
+    setCurrentLibraryName(newName);
+    if (dataSource === 'server') {
+      try {
+        await updateLibraryName(currentLibraryId, newName);
+        showNotification('Library name updated successfully');
+      } catch (error) {
+        console.error('Error updating library name:', error);
+        showNotification('Failed to update library name on server', 'error');
+      }
     }
+    handleSave();
   };
 
   const handleLoadSharedLibrary = (shared) => {
@@ -336,7 +433,7 @@ const App = () => {
 
   const handleCloseIntro = async () => {
     setShowIntro(false);
-    await createNewLibrary(introLibraryName);
+    await handleCreateNewLibrary(introLibraryName);
   };
 
   const { theme } = useTheme();
