@@ -1,13 +1,13 @@
 import { useTheme } from './themes';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import JSUsCH2R from './components/JSUsCH2R';
 import EmojiLibrary from './components/EmojiLibrary';
-import EditPopup from './components/EditPopup';
+import WeeklySchedule from './components/WeeklySchedule';
 import ThemeSelector from './components/ThemeSelector';
 import TimeAllocationAnalysis from './components/TimeAllocationAnalysis';
 import ShareModal from './components/ShareModal';
-import WeeklySchedule from './components/WeeklySchedule';
 import ScheduleLibrarySharing from './components/ScheduleLibrarySharing';
+import EditPopup from './components/EditPopup';
 import Notification from './components/Notification';
 import HelpModal from './components/HelpModal';
 import Auth from './components/Auth';
@@ -312,9 +312,9 @@ const App = () => {
     }
   };
 
-  const showNotification = (message, type = 'success') => {
+  const showNotification = useCallback((message, type = 'info') => {
     setNotification({ message, type });
-  };
+  }, []);
 
   const handleCreateNewLibrary = async (name = 'My Schedule Library') => {
     const newLibrary = {
@@ -544,6 +544,7 @@ const App = () => {
           setVisibility={setVisibility}
           sharedWith={sharedWith}
           setSharedWith={setSharedWith}
+          showNotification={showNotification}
         />
         
         <TimeAllocationAnalysis 
@@ -566,6 +567,7 @@ const App = () => {
           setVisibility={setVisibility}
           sharedWith={sharedWith}
           setSharedWith={setSharedWith}
+          showNotification={showNotification}
         />
                 
         <ScheduleLibrarySharing

@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useTheme } from '../themes';
 import JSUsCH2R from './JSUsCH2R';
 import { Lock, Share2, Users } from 'lucide-react';
 import { useSwipeable } from 'react-swipeable';
 import { saveSchedule, getSchedule, getSchedules, getPublicSchedules } from '../services/api';
 import Notification from './Notification';
+import { useAuth } from '../AuthContext';
 
 const WeeklySchedule = ({ 
   weekSchedule, 
@@ -15,8 +16,6 @@ const WeeklySchedule = ({
   onTooltipDismiss, 
   onOpenHelpModal, 
   onActiveDayChange,
-  isAuthenticated,
-  userId,
   currentLibraryId,
   visibility,
   setVisibility,
@@ -24,48 +23,40 @@ const WeeklySchedule = ({
   setSharedWith
 }) => {
   const { theme } = useTheme();
+  const { isAuthenticated, userId } = useAuth();
   const [activeDay, setActiveDay] = useState(weekStart);
   const [showTimeLabels, setShowTimeLabels] = useState(() => {
     const stored = localStorage.getItem('jsusch2r-show-time-labels');
     return stored !== null ? JSON.parse(stored) : true;
   });
   const [schedules, setSchedules] = useState([]);
+  const [notification, setNotification] = useState(null);
   const [scheduleName, setScheduleName] = useState('My Schedule');
+  const [error, setError] = useState(null);
 
+  const showNotification = useCallback((message, type = 'info') => {
+    setNotification({ message, type });
+  }, []);
 
-  useEffect(() => {
-    localStorage.setItem('jsusch2r-show-time-labels', JSON.stringify(showTimeLabels));
-  }, [showTimeLabels]);
-
-  useEffect(() => {
-    if (isAuthenticated && userId) {
-      fetchUserSchedules();
-    } else if (process.env.NODE_ENV === 'development') {
-      console.log('User not authenticated or user ID is undefined, skipping fetch');
-    }
-  }, [isAuthenticated, userId]);
 
   const DAYS = weekStart === 'Mon' 
     ? ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
     : ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-  useEffect(() => {
-    setActiveDay(weekStart);
-  }, [weekStart]);
+  const fetchUserSchedules = useCallback(async () => {
+    if (!isAuthenticated) {
+      setSchedules([]);
+      return;
+    }
 
-  useEffect(() => {
-    onActiveDayChange(activeDay);
-  }, [activeDay, onActiveDayChange]);
-
-  const fetchUserSchedules = async () => {
     try {
-      const userSchedules = await getSchedules(userId);
-      // Handle the fetched schedules
+      const userSchedules = await getSchedules();
+      setSchedules(userSchedules);
     } catch (error) {
       console.error('Error fetching user schedules:', error);
-      Notification('Failed to fetch schedules', 'error');
+      setError('Failed to fetch schedules');
     }
-  };
+  }, [isAuthenticated]);
 
   const handleSaveSchedule = async () => {
     if (!isAuthenticated) {
@@ -149,6 +140,22 @@ const WeeklySchedule = ({
         return <Lock size={20} />;
     }
   };
+
+  useEffect(() => {
+    fetchUserSchedules();
+  }, [fetchUserSchedules]);
+
+  useEffect(() => {
+    localStorage.setItem('jsusch2r-show-time-labels', JSON.stringify(showTimeLabels));
+  }, [showTimeLabels]);
+
+  useEffect(() => {
+    setActiveDay(weekStart);
+  }, [weekStart]);
+
+  useEffect(() => {
+    onActiveDayChange(activeDay);
+  }, [activeDay, onActiveDayChange]);
 
   return (
     <div className={`${theme.card} rounded-lg shadow-lg p-6 mt-8 relative`}>
@@ -265,6 +272,14 @@ const WeeklySchedule = ({
           />
         </div>
       )}
+      {notification && (
+        <Notification
+          message={notification.message}
+          type={notification.type}
+          onClose={() => setNotification(null)}
+        />
+      )}
+      {error && <div className="text-red-500">{error}</div>}
     </div>
   );
 };

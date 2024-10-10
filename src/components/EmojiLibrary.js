@@ -1,10 +1,11 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useTheme } from '../themes';
 import { saveEmojiLibrary, getUserEmojiLibraries } from '../services/api';
 import { createEmojiLibrary, updateEmojiLibrary, deleteEmojiLibrary } from '../services/api';
 import EmojiLibraryHelpModal from './EmojiLibraryHelpModal';
 import ConfirmDialog from './ConfirmDialog';
 import { Trash2, Share2, Lock, Users } from 'lucide-react';
+import { useAuth } from '../AuthContext';
 
 const EmojiLibrary = ({ 
   emojiLibrary, 
@@ -12,14 +13,13 @@ const EmojiLibrary = ({
   onRemoveEmoji, 
   onUpdateEmoji, 
   onRestoreDefaults, 
-  isAuthenticated, 
-  userId, 
   showNotification,
   visibility,
   setVisibility,
   sharedWith,
   setSharedWith
 }) => {
+  const { isAuthenticated, userId } = useAuth();
   const [newEmoji, setNewEmoji] = useState('');
   const [newActivity, setNewActivity] = useState('');
   const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
@@ -30,6 +30,7 @@ const EmojiLibrary = ({
   const [libraryName, setLibraryName] = useState('My Emoji Library');
   const [libraries, setLibraries] = useState([]);
   const [userLibraries, setUserLibraries] = useState([]);
+  const [error, setError] = useState(null);
 
   const handleDeselect = () => {
     setSelectedEmoji(null);
@@ -103,15 +104,24 @@ const EmojiLibrary = ({
     handleDeselect();
   };
 
-  const fetchUserLibraries = async () => {
+  const fetchUserLibraries = useCallback(async () => {
+    if (!isAuthenticated) {
+      setUserLibraries([]);
+      return;
+    }
+
     try {
-      const libraries = await getUserEmojiLibraries(userId);
+      const libraries = await getUserEmojiLibraries();
       setUserLibraries(libraries);
     } catch (error) {
       console.error('Error fetching user libraries:', error);
-      showNotification('Failed to fetch user libraries', 'error');
+      setError('Failed to fetch user libraries');
     }
-  };
+  }, [isAuthenticated]);
+
+  useEffect(() => {
+    fetchUserLibraries();
+  }, [fetchUserLibraries]);
 
   const handleSaveLibrary = async () => {
     try {
@@ -296,6 +306,7 @@ const EmojiLibrary = ({
         onConfirm={handleConfirmRestore}
         message="Are you sure you want to restore default emojis? This will remove all custom emojis."
       />
+      {error && <div className="text-red-500">{error}</div>}
     </div>
   );
 };

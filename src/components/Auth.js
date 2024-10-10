@@ -1,17 +1,18 @@
 // src/components/Auth.js
 
 import React, { useState } from 'react';
-import { register, login } from '../services/api';
+import { register, login, saveData } from '../services/api';
 import { useTheme } from '../themes';
 import { getFromIndexedDB } from '../utils/indexedDB';
-import { saveData } from '../services/api';
+import { useAuth } from '../AuthContext';
 
-const Auth = ({ onLogin, onClose }) => {
+const Auth = ({ onClose }) => {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const { theme } = useTheme();
+  const { login: authLogin } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -26,7 +27,7 @@ const Auth = ({ onLogin, onClose }) => {
       }
 
       if (userData.token) {
-        // For both login and register, we'll try to migrate local data
+        // Attempt to migrate local data
         const localData = await getFromIndexedDB();
         if (localData) {
           try {
@@ -34,18 +35,22 @@ const Auth = ({ onLogin, onClose }) => {
             console.log('Local data migrated successfully');
           } catch (migrationError) {
             console.error('Error migrating local data:', migrationError);
-            // We don't want to stop the login process if migration fails
-            // but we might want to inform the user
             setError('Logged in successfully, but there was an issue migrating your local data.');
+            // We'll still proceed with login even if migration fails
           }
         }
 
-        onLogin(userData);
+        // Now that we've attempted to migrate data, we can save the token and userId
+        localStorage.setItem('token', userData.token);
+        localStorage.setItem('userId', userData.userId);
+        authLogin(userData.token, userData.userId);
+
         onClose();
       } else {
         setError(isLogin ? 'Login failed. Please try again.' : 'Registration successful, but login failed. Please try logging in.');
       }
     } catch (err) {
+      console.error('Login/Register error:', err);
       setError(err.message || `An error occurred during ${isLogin ? 'login' : 'registration'}. Please try again.`);
     }
   };
@@ -76,6 +81,7 @@ const Auth = ({ onLogin, onClose }) => {
             onChange={(e) => setPassword(e.target.value)}
             className={`${theme.input} px-2 py-1 rounded w-full mb-4`}
             required
+            autoComplete="current-password"
           />
           <button type="submit" className={`${theme.accent} ${theme.text} px-4 py-2 rounded ${theme.hover} w-full`}>
             {isLogin ? 'Login' : 'Register'}

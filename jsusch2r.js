@@ -546,10 +546,14 @@ app.use((req, res, next) => {
 
 app.use((err, req, res, next) => {
   console.error(err.stack);
-  res.status(err.status || 500).json({
+  
+  const statusCode = err.statusCode || 500;
+  const message = err.message || 'Internal Server Error';
+
+  res.status(statusCode).json({
     error: {
-      message: err.message || 'An unexpected error occurred',
-      status: err.status || 500
+      message,
+      status: statusCode
     }
   });
 });

@@ -1,5 +1,6 @@
 // src/services/api.js
 import { saveToIndexedDB, getFromIndexedDB } from '../utils/indexedDB';
+import { getAuthState } from '../AuthContext';
 
 const API_BASE_URL = process.env.NODE_ENV === 'production'
   ? 'https://your-api-server-url.com/api'
@@ -21,24 +22,31 @@ async function handleResponse(response) {
 }
 
 async function request(url, options = {}) {
-  const token = localStorage.getItem('token');
-  const userId = localStorage.getItem('userId');
+  const { isAuthenticated, userId, token } = getAuthState();
   
+  if (!isAuthenticated) {
+    console.warn('API call attempted while user is not authenticated');
+    return null;
+  }
+
   options.headers = {
     ...options.headers,
-    'Content-Type': 'application/json'
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${token}`,
+    'User-ID': userId
   };
 
-  if (token) {
-    options.headers['Authorization'] = `Bearer ${token}`;
+  try {
+    const response = await fetch(`${API_BASE_URL}${url}`, options);
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+    }
+    return await response.json();
+  } catch (error) {
+    console.error('API request failed:', error);
+    throw error;
   }
-
-  if (userId) {
-    options.headers['User-ID'] = userId;
-  }
-
-  const response = await fetch(`${API_BASE_URL}${url}`, options);
-  return handleResponse(response);
 }
 
 async function nonAuthRequest(url, options = {}) {
@@ -64,12 +72,7 @@ export async function login(email, password) {
     method: 'POST',
     body: JSON.stringify({ email, password }),
   });
-  if (data.token) {
-    localStorage.setItem('token', data.token);
-  }
-  if (data.userId) {
-    localStorage.setItem('userId', data.userId);
-  }
+  // We'll return the data without saving to localStorage
   return data;
 }
 
@@ -122,8 +125,8 @@ export async function getSchedule(scheduleId) {
   return request(`/schedules/${scheduleId}`);
 }
 
-export async function getSchedules(userId) {
-  return request(`/schedules?userId=${userId}`);
+export async function getSchedules() {
+  return request('/schedules');
 }
 
 export const getPublicSchedule = async (uniqueId) => {
@@ -186,8 +189,8 @@ export async function deleteSchedule(id) {
   return request(`/schedules/${id}`, { method: 'DELETE' });
 }
 
-export async function getUserEmojiLibraries(userId) {
-  return request(`/emoji-libraries/user/${userId}`);
+export async function getUserEmojiLibraries() {
+  return request('/emoji-libraries/user');
 }
 
 export const getPublicEmojiLibrary = async (uniqueId) => {
@@ -211,8 +214,8 @@ export const saveData = async (data, dataSource) => {
   if (dataSource === 'local') {
     return saveToIndexedDB(data);
   } else {
-    // Use an existing endpoint or create a new one
-    return request('/user-data', {
+    // Use a non-authenticated request for saving user data
+    return nonAuthRequest('/user-data', {
       method: 'POST',
       body: JSON.stringify(data),
     });
