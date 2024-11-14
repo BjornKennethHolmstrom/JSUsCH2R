@@ -1,13 +1,16 @@
 import React, { useState } from 'react';
 import { useTheme } from '../themes';
 
-const EditPopup = ({ emoji, activity, emojiLibrary, onSave, onClose }) => {
-  const [currentEmoji, setCurrentEmoji] = useState(emoji);
-  const [currentActivity, setCurrentActivity] = useState(activity);
+const EditPopup = ({ emoji, activity, emojiLibrary = [], onSave, onClose }) => {
+  const [currentEmoji, setCurrentEmoji] = useState(emoji || '');
+  const [currentActivity, setCurrentActivity] = useState(activity || '');
   const { theme } = useTheme();
 
   const handleSave = () => {
-    onSave(currentEmoji, currentActivity);
+    if (currentEmoji && currentActivity) {
+      onSave(currentEmoji, currentActivity);
+      onClose();
+    }
   };
 
   return (
@@ -17,7 +20,7 @@ const EditPopup = ({ emoji, activity, emojiLibrary, onSave, onClose }) => {
         <div className="mb-4">
           <label className={`block mb-2 ${theme.text}`}>Emoji:</label>
           <div className="flex flex-wrap gap-2 mb-2">
-            {emojiLibrary.map((item, index) => (
+            {Array.isArray(emojiLibrary) && emojiLibrary.map((item, index) => (
               <button
                 key={index}
                 className={`text-2xl p-2 rounded ${item.emoji === currentEmoji ? theme.accent : theme.emojiBg} ${theme.hover}`}

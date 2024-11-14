@@ -16,6 +16,7 @@ import { saveScheduleLibrary, getScheduleLibrary, updateLibraryName } from './se
 import { getEmojiLibraries, getSchedules, createSchedule, updateSchedule } from './services/api';
 import { initDB, saveToIndexedDB, getFromIndexedDB } from './utils/indexedDB';
 import { saveData, getData } from './services/api';
+import { useAuth } from './AuthContext';
 
 const useLocalStorage = (key, initialValue) => {
   const [storedValue, setStoredValue] = useState(() => {
@@ -23,7 +24,7 @@ const useLocalStorage = (key, initialValue) => {
       const item = window.localStorage.getItem(key);
       return item ? JSON.parse(item) : initialValue;
     } catch (error) {
-      console.log(error);
+      console.error('Error reading from localStorage:', error);
       return initialValue;
     }
   });
@@ -34,7 +35,7 @@ const useLocalStorage = (key, initialValue) => {
       setStoredValue(valueToStore);
       window.localStorage.setItem(key, JSON.stringify(valueToStore));
     } catch (error) {
-      console.log(error);
+      console.error('Error saving to localStorage:', error);
     }
   };
 
@@ -88,6 +89,7 @@ const defaultEmojiLibrary = [
   { emoji: "🎨", activity: "Creating" },
   { emoji: "🎮", activity: "Gaming" },
   { emoji: "🌳", activity: "Nature walk" },
+  { emoji: "🚶", activity: "Walk"},
   { emoji: "💻", activity: "Coding" },
   { emoji: "🎵", activity: "Music" },
   { emoji: "✍️", activity: "Writing" },
@@ -125,50 +127,80 @@ const App = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [dataSource, setDataSource] = useState('local');
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [userId, setUserId] = useState(null);
   const [userLibraries, setUserLibraries] = useState([]);
   const [userSchedules, setUserSchedules] = useState([]);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [visibility, setVisibility] = useState('private');
   const [sharedWith, setSharedWith] = useState([]);
+  const { logout } = useAuth();
+  const [authError, setAuthError] = useState(null);
 
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    const storedUserId = localStorage.getItem('userId');
-    if (token && storedUserId) {
-      setIsAuthenticated(true);
-      setUserId(storedUserId);
-      setDataSource('server');
-    } else {
-      setIsAuthenticated(false);
-      setUserId(null);
-      setDataSource('local');
-    }
-  }, []);
 
-  useEffect(() => {
-    const loadData = async () => {
+   useEffect(() => {
+    const initializeApp = async () => {
       setIsLoading(true);
       try {
-        const data = await getData(dataSource);
-        if (data) {
-          setWeekSchedule(data.weekSchedule || defaultWeekSchedule);
-          setEmojiLibrary(data.emojiLibrary || defaultEmojiLibrary);
-          setCurrentLibraryId(data.currentLibraryId || null);
-          setCurrentLibraryName(data.currentLibraryName || '');
+        const token = localStorage.getItem('token');
+        const storedUserId = localStorage.getItem('userId');
+        
+        if (token && storedUserId) {
+          setIsAuthenticated(true);
+          setUserId(storedUserId);
+          setDataSource('server');
+          
+          // Load data from server
+          try {
+            const data = await getData('server');
+            if (data) {
+              setWeekSchedule(data.weekSchedule || defaultWeekSchedule);
+              setEmojiLibrary(data.emojiLibrary || defaultEmojiLibrary);
+              setCurrentLibraryId(data.currentLibraryId || null);
+              setCurrentLibraryName(data.currentLibraryName || '');
+            } else {
+              setWeekSchedule(defaultWeekSchedule);
+              setEmojiLibrary(defaultEmojiLibrary); // Set default if no data
+              setShowIntro(true);
+            }
+          } catch (error) {
+            console.error('Error loading server data:', error);
+            // Fallback to local data if server fails
+            const localData = await getData('local');
+            if (localData) {
+              setWeekSchedule(localData.weekSchedule || defaultWeekSchedule);
+              setEmojiLibrary(localData.emojiLibrary || defaultEmojiLibrary);
+            }
+          }
         } else {
-          setShowIntro(true);
+          setIsAuthenticated(false);
+          setUserId(null);
+          setDataSource('local');
+          
+          // Load local data
+          const localData = await getData('local');
+          if (localData) {
+            setWeekSchedule(localData.weekSchedule || defaultWeekSchedule);
+            setEmojiLibrary(localData.emojiLibrary || defaultEmojiLibrary);
+          } else {
+            setWeekSchedule(defaultWeekSchedule);
+            setEmojiLibrary(defaultEmojiLibrary);
+            setShowIntro(true);
+          }
         }
       } catch (error) {
-        console.error('Error loading data:', error);
-        showNotification('Failed to load data', 'error');
-        setShowIntro(true);
+        console.error('Initialization error:', error);
+        setAuthError(error.message);
+        // Fall back to defaults
+        setWeekSchedule(defaultWeekSchedule);
+        setEmojiLibrary(defaultEmojiLibrary);
+      } finally {
+        setIsLoading(false);
       }
-      setIsLoading(false);
     };
 
-    loadData();
-  }, [dataSource]);
+    initializeApp();
+  }, []);
 
   /*useEffect(() => {
     const initializeLibrary = async () => {
@@ -253,6 +285,7 @@ const App = () => {
   };
 
   const handleLogout = () => {
+    logout();
     setIsAuthenticated(false);
     setUserId(null);
     setDataSource('local');
@@ -480,8 +513,38 @@ const App = () => {
     setIsShareModalOpen(true);
   };
 
+  const handleRestoreDefaults = () => {
+    setEmojiLibrary(defaultEmojiLibrary);
+    setWeekSchedule(defaultWeekSchedule);
+    showNotification('Restored default settings');
+  };
+
+  // Loading screen
   if (isLoading) {
-    return <div>Loading...</div>; // Or a more sophisticated loading indicator
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className={`text-xl ${theme?.text || 'text-gray-800'}`}>
+          Loading JSUsCH²R...
+        </div>
+      </div>
+    );
+  }
+
+  // Error screen
+  if (authError) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-red-500">
+          <p>Error initializing app: {authError}</p>
+          <button 
+            onClick={() => window.location.reload()}
+            className="mt-4 px-4 py-2 bg-blue-500 text-white rounded"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -544,6 +607,7 @@ const App = () => {
           setVisibility={setVisibility}
           sharedWith={sharedWith}
           setSharedWith={setSharedWith}
+          emojiLibrary={emojiLibrary}
           showNotification={showNotification}
         />
         
@@ -561,7 +625,7 @@ const App = () => {
           onAddEmoji={handleAddEmoji}
           onRemoveEmoji={handleRemoveEmoji}
           onUpdateEmoji={handleUpdateEmoji}
-          onRestoreDefaults={() => setEmojiLibrary(defaultEmojiLibrary)}
+          onRestoreDefaults={handleRestoreDefaults}
           isAuthenticated={isAuthenticated}
           visibility={visibility}
           setVisibility={setVisibility}

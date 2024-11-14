@@ -29,56 +29,84 @@ Created by [Björn Kenneth Holmström](https://bjornkennethholmstrom.wordpress.c
 
 - Node.js (v12 or later)
 - npm (usually comes with Node.js)
+- PostgreSQL database
+
+### Environment Setup
+
+1. Create a `.env` file in the root directory with the following variables:
+```
+DB_USER=your_db_user
+DB_HOST=localhost
+DB_NAME=jsusch2r_db
+DB_PASSWORD=your_db_password
+DB_PORT=5432
+JWT_SECRET=your_jwt_secret
+PORT=3001
+```
 
 ### Installation
 
 1. Clone the repository:
-   ```
-   git clone https://github.com/BjornKennethHolmstrom/JSUsCH2R.git
-   cd JSUsCH2R
-   ```
+```bash
+git clone https://github.com/BjornKennethHolmstrom/JSUsCH2R.git
+cd JSUsCH2R
+```
 
 2. Install dependencies:
-   ```
-   npm install
-   ```
+```bash
+npm install
+```
 
-3. Start the development server:
-   ```
-   npm start
-   ```
+### Running the Application
 
-4. In a separate terminal, start the API server:
-   ```
-   node server/jsusch2r.js
-   ```
+You can run both the client and server concurrently using:
+```bash
+npm run dev
+```
 
-5. Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+Or run them separately:
 
-## Usage
+1. Start the server:
+```bash
+npm run server
+# or for development with auto-reload:
+npm run server:dev
+```
 
-- Navigate through the week using the day tabs.
-- Click on any emoji in the schedule to edit the activity for that hour.
-- Use the Emoji Library to add or remove emojis for quick selection.
-- Explore different themes in the theme selector.
-- Analyze your time allocation using the built-in chart.
-- Share your schedule using the share feature.
-- Reset or delete your library if needed.
-- Your changes are automatically saved to the server.
+2. In a new terminal, start the client:
+```bash
+npm start
+```
+
+The client will be available at [http://localhost:3000](http://localhost:3000)
+The server will run on [http://localhost:3001](http://localhost:3001)
+
+### Testing
+
+Run client-side tests:
+```bash
+npm test
+```
+
+Run server-side tests:
+```bash
+npm run test:server
+```
+
+Run all tests with coverage:
+```bash
+npm run test:all
+```
 
 ## Building for Production
 
-To create a production build, run:
-
-```
+To create a production build:
+```bash
 npm run build
 ```
 
-This will create a `build` directory with optimized production-ready files.
-
-For deployment to GitHub Pages, run:
-
-```
+For deployment to GitHub Pages:
+```bash
 npm run deploy
 ```
 
@@ -92,7 +120,7 @@ This project is published under a custom license (see LICENSE.md).
 
 ## Acknowledgments
 
-- This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
-- Emoji designs are provided by the Unicode Consortium.
+- This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app)
+- Emoji designs are provided by the Unicode Consortium
 - Claude A.I. for development assistance
 - My family for support and infrastructure

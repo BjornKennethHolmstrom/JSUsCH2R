@@ -1,4 +1,3 @@
-// src/services/api.js
 import { saveToIndexedDB, getFromIndexedDB } from '../utils/indexedDB';
 import { getAuthState } from '../AuthContext';
 
@@ -6,42 +5,40 @@ const API_BASE_URL = process.env.NODE_ENV === 'production'
   ? 'https://your-api-server-url.com/api'
   : 'http://localhost:3001/api';
 
-async function handleResponse(response) {
-  const contentType = response.headers.get("content-type");
-  if (contentType && contentType.indexOf("application/json") !== -1) {
-    const data = await response.json();
-    if (!response.ok) {
-      throw new Error(data.error || `HTTP error! status: ${response.status}`);
-    }
-    return data;
-  } else {
-    const text = await response.text();
-    console.error('Received non-JSON response:', text);
-    throw new Error(`Received non-JSON response: ${text}`);
-  }
-}
-
 async function request(url, options = {}) {
-  const { isAuthenticated, userId, token } = getAuthState();
+  const { isAuthenticated, token } = getAuthState();
   
   if (!isAuthenticated) {
     console.warn('API call attempted while user is not authenticated');
     return null;
   }
 
+  if (!token) {
+    throw new Error('No authentication token available');
+  }
+
   options.headers = {
     ...options.headers,
     'Content-Type': 'application/json',
     'Authorization': `Bearer ${token}`,
-    'User-ID': userId
   };
 
   try {
     const response = await fetch(`${API_BASE_URL}${url}`, options);
+    
+    if (response.status === 403) {
+      // Token might be expired or invalid
+      localStorage.removeItem('token');
+      localStorage.removeItem('userId');
+      window.location.reload(); // Force a reload to reset auth state
+      throw new Error('Authentication expired. Please log in again.');
+    }
+    
     if (!response.ok) {
       const errorData = await response.json();
-      throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+      throw new Error(errorData.message || `Request failed with status ${response.status}`);
     }
+    
     return await response.json();
   } catch (error) {
     console.error('API request failed:', error);
@@ -49,183 +46,206 @@ async function request(url, options = {}) {
   }
 }
 
-async function nonAuthRequest(url, options = {}) {
+// Public endpoints don't need authentication
+async function publicRequest(url, options = {}) {
   options.headers = {
     ...options.headers,
     'Content-Type': 'application/json'
   };
 
-  const response = await fetch(`${API_BASE_URL}${url}`, options);
-  return handleResponse(response);
+  try {
+    console.log('Making request to:', `${API_BASE_URL}${url}`);
+    console.log('Request options:', {
+      ...options,
+      body: options.body ? JSON.parse(options.body) : undefined
+    });
+
+    const response = await fetch(`${API_BASE_URL}${url}`, options);
+    const responseData = await response.json();
+    
+    console.log('Response status:', response.status);
+    console.log('Response data:', responseData);
+
+    if (!response.ok) {
+      throw new Error(responseData.error?.message || `Request failed with status ${response.status}`);
+    }
+    return responseData;
+  } catch (error) {
+    console.error('Public API request failed:', error);
+    throw error;
+  }
 }
 
 export async function register(email, password) {
-  return request('/register', {
+  return publicRequest('/auth/register', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email, password }),
   });
 }
 
 export async function login(email, password) {
-  const data = await nonAuthRequest('/login', {
+  return publicRequest('/auth/login', {
     method: 'POST',
     body: JSON.stringify({ email, password }),
   });
-  // We'll return the data without saving to localStorage
-  return data;
 }
 
-export async function getSharedSchedule(uniqueId) {
-  return request(`/shared-schedule/${uniqueId}`);
+export async function getUserData() {
+  return request('/user-data');
 }
 
-export const getScheduleLibrary = async (id) => {
-  console.log('Getting schedule library:', id);
-  return request(`/schedule-library/${id}`);
-};
-
-export const updateLibraryName = async (id, name) => {
-  console.log('Updating library name:', id, name);
-  return request(`/schedule-library/${id}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ name }),
-  });
-};
-
-export const searchPublicLibraries = async (searchTerm) => {
-  console.log('Searching public libraries:', searchTerm);
-  return request(`/public-libraries?search=${encodeURIComponent(searchTerm)}`);
-};
-
-export const mergeEmojiLibraries = async (sourceId, targetId) => {
-  console.log('Merging emoji libraries:', sourceId, targetId);
-  return request('/merge-emoji-library', {
+export async function saveUserData(userData) {
+  return request('/user-data', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ sourceId, targetId }),
+    body: JSON.stringify(userData),
   });
-};
-
-export const deleteScheduleLibrary = async (id) => {
-  console.log('Deleting schedule library:', id);
-  return request(`/schedule-library/${id}`, { method: 'DELETE' });
-};
-
-export const saveSchedule = async (userId, libraryId, name, weekData, visibility, sharedWith) => {
-  return request('/schedules', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ userId, libraryId, name, weekData, visibility, sharedWith }),
-  });
-};
-
-export async function getSchedule(scheduleId) {
-  return request(`/schedules/${scheduleId}`);
 }
 
 export async function getSchedules() {
   return request('/schedules');
 }
 
-export const getPublicSchedule = async (uniqueId) => {
-  return request(`/schedules/public/${uniqueId}`);
-};
-
-export async function getPublicSchedules(searchTerm = '') {
-  return request(`/schedules/public?search=${encodeURIComponent(searchTerm)}`);
+export async function getSchedule(scheduleId) {
+  return request(`/schedules/${scheduleId}`);
 }
 
-export const saveEmojiLibrary = async (name, emojis, visibility, sharedWith) => {
-  return request('/emoji-libraries', {
+export async function saveSchedule(scheduleData) {
+  return request('/schedules', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ name, emojis, visibility, sharedWith }),
-  });
-};
-
-export async function getEmojiLibraries(email = '') {
-  return request(`/emoji-libraries?email=${encodeURIComponent(email)}`);
-}
-
-export async function createEmojiLibrary(name, emojis, visibility, sharedWith) {
-  return request('/emoji-libraries', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ name, emojis, visibility, sharedWith }),
+    body: JSON.stringify(scheduleData),
   });
 }
 
-export async function updateEmojiLibrary(id, name, emojis, visibility, sharedWith) {
-  return request(`/emoji-libraries/${id}`, {
+export async function updateSchedule(id, scheduleData) {
+  return request(`/schedules/${id}`, {
     method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ name, emojis, visibility, sharedWith }),
+    body: JSON.stringify(scheduleData),
   });
+}
+
+export async function createSchedule(scheduleData) {
+  return saveSchedule(scheduleData);
+}
+
+export async function getEmojiLibraries() {
+  return request('/emoji-libraries');
+}
+
+export async function saveEmojiLibrary(libraryData) {
+  return request('/emoji-libraries', {
+    method: 'POST',
+    body: JSON.stringify(libraryData),
+  });
+}
+
+export async function getUserEmojiLibraries() {
+  return getEmojiLibraries();
 }
 
 export async function deleteEmojiLibrary(id) {
   return request(`/emoji-libraries/${id}`, { method: 'DELETE' });
 }
 
-export async function createSchedule(library_id, week_data) {
-  return request('/schedules', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ library_id, week_data }),
-  });
+export async function getPublicSchedules(searchTerm = '') {
+  return publicRequest(`/schedules/public?search=${encodeURIComponent(searchTerm)}`);
 }
-
-export async function updateSchedule(id, name, libraryId, weekData, visibility, sharedWith) {
-  return request(`/schedules/${id}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ name, libraryId, weekData, visibility, sharedWith }),
-  });
-}
-
-export async function deleteSchedule(id) {
-  return request(`/schedules/${id}`, { method: 'DELETE' });
-}
-
-export async function getUserEmojiLibraries() {
-  return request('/emoji-libraries/user');
-}
-
-export const getPublicEmojiLibrary = async (uniqueId) => {
-  return request(`/emoji-libraries/public/${uniqueId}`);
-};
 
 export async function getPublicEmojiLibraries(searchTerm = '') {
-  return request(`/emoji-libraries/public?search=${encodeURIComponent(searchTerm)}`);
+  return publicRequest(`/emoji-libraries/public?search=${encodeURIComponent(searchTerm)}`);
 }
 
+export async function getPublicSchedule(uniqueId) {
+  return publicRequest(`/schedules/public/${uniqueId}`);
+}
+
+export async function getPublicEmojiLibrary(uniqueId) {
+  return publicRequest(`/emoji-libraries/public/${uniqueId}`);
+}
+
+export async function getSharedSchedule(uniqueId) {
+  return request(`/shared-schedule/${uniqueId}`);
+}
+
+export async function mergeEmojiLibraries(sourceId, targetId) {
+  return request('/merge-emoji-library', {
+    method: 'POST',
+    body: JSON.stringify({ sourceId, targetId }),
+  });
+}
+
+export async function deleteScheduleLibrary(id) {
+  return request(`/schedule-library/${id}`, { method: 'DELETE' });
+}
+
+export const saveScheduleLibrary = async (library) => {
+  return request('/schedules/library', {
+    method: 'POST',
+    body: JSON.stringify(library),
+  });
+};
+
+export const getScheduleLibrary = async (id) => {
+  return request(`/schedules/library/${id}`);
+};
+
+export const updateLibraryName = async (id, name) => {
+  return request(`/schedules/library/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify({ name }),
+  });
+};
+
 export const getData = async (dataSource) => {
-  if (dataSource === 'local') {
-    return getFromIndexedDB();
-  } else {
-    // Use an existing endpoint or create a new one
-    return request('/user-data');
+  try {
+    if (dataSource === 'local') {
+      return getFromIndexedDB();
+    }
+    
+    // For server data, ensure we have authentication
+    const { isAuthenticated, token } = getAuthState();
+    if (!isAuthenticated || !token) {
+      console.warn('Attempted to fetch server data without authentication');
+      return null;
+    }
+
+    const response = await fetch(`${API_BASE_URL}/user-data`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch user data from server');
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error in getData:', error);
+    // If server request fails and we're trying to get server data,
+    // fall back to local data
+    if (dataSource === 'server') {
+      console.log('Falling back to local data');
+      return getFromIndexedDB();
+    }
+    return null;
   }
 };
 
 export const saveData = async (data, dataSource) => {
   if (dataSource === 'local') {
     return saveToIndexedDB(data);
-  } else {
-    // Use a non-authenticated request for saving user data
-    return nonAuthRequest('/user-data', {
+  }
+  
+  try {
+    return await request('/user-data', {
       method: 'POST',
       body: JSON.stringify(data),
     });
+  } catch (error) {
+    console.error('Error saving to server:', error);
+    // Fallback to saving locally if server request fails
+    return saveToIndexedDB(data);
   }
-};
-
-// Update saveScheduleLibrary function
-export const saveScheduleLibrary = async (library) => {
-  return request('/schedules', {
-    method: 'POST',
-    body: JSON.stringify(library),
-  });
 };

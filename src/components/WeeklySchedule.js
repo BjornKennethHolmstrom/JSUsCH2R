@@ -3,9 +3,11 @@ import { useTheme } from '../themes';
 import JSUsCH2R from './JSUsCH2R';
 import { Lock, Share2, Users } from 'lucide-react';
 import { useSwipeable } from 'react-swipeable';
-import { saveSchedule, getSchedule, getSchedules, getPublicSchedules } from '../services/api';
+import { saveSchedule, getSchedule, getSchedules, updateSchedule, getPublicSchedules } from '../services/api';
 import Notification from './Notification';
+import { clearIndexedDB } from '../utils/indexedDB';
 import { useAuth } from '../AuthContext';
+import EditPopup from './EditPopup'; 
 
 const WeeklySchedule = ({ 
   weekSchedule, 
@@ -16,23 +18,25 @@ const WeeklySchedule = ({
   onTooltipDismiss, 
   onOpenHelpModal, 
   onActiveDayChange,
-  currentLibraryId,
   visibility,
   setVisibility,
   sharedWith,
-  setSharedWith
+  setSharedWith,
+  emojiLibrary,
 }) => {
   const { theme } = useTheme();
   const { isAuthenticated, userId } = useAuth();
   const [activeDay, setActiveDay] = useState(weekStart);
+  const [editingIndex, setEditingIndex] = useState(null);
   const [showTimeLabels, setShowTimeLabels] = useState(() => {
     const stored = localStorage.getItem('jsusch2r-show-time-labels');
     return stored !== null ? JSON.parse(stored) : true;
   });
   const [schedules, setSchedules] = useState([]);
-  const [notification, setNotification] = useState(null);
   const [scheduleName, setScheduleName] = useState('My Schedule');
+  const [currentScheduleId, setCurrentScheduleId] = useState(null);
   const [error, setError] = useState(null);
+  const [notification, setNotification] = useState(null);
 
   const showNotification = useCallback((message, type = 'info') => {
     setNotification({ message, type });
@@ -43,49 +47,92 @@ const WeeklySchedule = ({
     ? ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
     : ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-  const fetchUserSchedules = useCallback(async () => {
-    if (!isAuthenticated) {
-      setSchedules([]);
-      return;
-    }
-
+  const clearLocalData = useCallback(async () => {
     try {
-      const userSchedules = await getSchedules();
-      setSchedules(userSchedules);
+      localStorage.removeItem('jsusch2r-week-schedule');
+      await clearIndexedDB();
     } catch (error) {
-      console.error('Error fetching user schedules:', error);
-      setError('Failed to fetch schedules');
+      console.error('Error clearing local data:', error);
     }
-  }, [isAuthenticated]);
+  }, []);
 
   const handleSaveSchedule = async () => {
     if (!isAuthenticated) {
-      alert('Please log in to save your schedule');
+      showNotification('Please log in to save your schedule', 'error');
       return;
     }
+
     try {
-      await saveSchedule(userId, currentLibraryId, scheduleName, weekSchedule, visibility, sharedWith);
-      fetchUserSchedules();
-      alert('Schedule saved successfully!');
+      const scheduleData = {
+        name: scheduleName,
+        weekData: weekSchedule,
+        visibility: visibility || 'private',
+        sharedWith: sharedWith || []
+      };
+
+      const savedSchedule = await saveSchedule(scheduleData);
+      setCurrentScheduleId(savedSchedule.id);
+      
+      await fetchUserSchedules();
+      await clearLocalData();
+      
+      showNotification('New schedule saved successfully');
     } catch (error) {
       console.error('Error saving schedule:', error);
-      alert('Failed to save schedule. Please try again.');
+      showNotification(`Failed to save schedule: ${error.message}`, 'error');
+    }
+  };
+
+  const handleUpdateSchedule = async () => {
+    if (!isAuthenticated || !currentScheduleId) {
+      showNotification('Cannot update schedule', 'error');
+      return;
+    }
+
+    try {
+      const scheduleData = {
+        name: scheduleName,
+        weekData: weekSchedule,
+        visibility: visibility || 'private',
+        sharedWith: sharedWith || []
+      };
+
+      await updateSchedule(currentScheduleId, scheduleData);
+      await fetchUserSchedules();
+      await clearLocalData();
+      
+      showNotification('Schedule updated successfully');
+    } catch (error) {
+      console.error('Error updating schedule:', error);
+      showNotification(`Failed to update schedule: ${error.message}`, 'error');
     }
   };
 
   const handleLoadSchedule = async (scheduleId) => {
-    if (!isAuthenticated) {
-      alert('Please log in to load a schedule');
-      return;
-    }
+    if (!scheduleId) return;
+    
     try {
       const loadedSchedule = await getSchedule(scheduleId);
-      onDayScheduleUpdate(loadedSchedule.week_data);
-      setScheduleName(loadedSchedule.name);
-      setVisibility(loadedSchedule.visibility);
+      
+      if (!loadedSchedule.week_data) {
+        throw new Error('Invalid schedule data received');
+      }
+
+      const weekData = typeof loadedSchedule.week_data === 'string' 
+        ? JSON.parse(loadedSchedule.week_data)
+        : loadedSchedule.week_data;
+
+      onDayScheduleUpdate(weekData);
+      setScheduleName(loadedSchedule.name || 'My Schedule');
+      setVisibility(loadedSchedule.visibility || 'private');
+      setSharedWith(loadedSchedule.shared_with || []);
+      setCurrentScheduleId(loadedSchedule.id);
+      
+      await clearLocalData();
+      showNotification('Schedule loaded successfully');
     } catch (error) {
       console.error('Error loading schedule:', error);
-      alert('Failed to load schedule. Please try again.');
+      showNotification(`Failed to load schedule: ${error.message}`, 'error');
     }
   };
 
@@ -100,7 +147,18 @@ const WeeklySchedule = ({
   };
 
   const handleEmojiClick = (index) => {
-    onEmojiClick(activeDay, index);
+    setEditingIndex(index);
+  };
+
+  const handleEditSave = (emoji, activity) => {
+    if (editingIndex !== null && weekSchedule[activeDay]) {
+      const newDaySchedule = weekSchedule[activeDay].map((item, index) => 
+        index === editingIndex ? { emoji, activity } : item
+      );
+      
+      onDayScheduleUpdate(activeDay, newDaySchedule);  // Pass both the day and the new schedule
+      setEditingIndex(null);
+    }
   };
 
   const handlers = useSwipeable({
@@ -141,6 +199,21 @@ const WeeklySchedule = ({
     }
   };
 
+  const fetchUserSchedules = useCallback(async () => {
+    if (!isAuthenticated) {
+      setSchedules([]);
+      return;
+    }
+
+    try {
+      const userSchedules = await getSchedules();
+      setSchedules(userSchedules);
+    } catch (error) {
+      console.error('Error fetching schedules:', error);
+      showNotification('Failed to fetch schedules', 'error');
+    }
+  }, [isAuthenticated, showNotification]);
+
   useEffect(() => {
     fetchUserSchedules();
   }, [fetchUserSchedules]);
@@ -156,6 +229,16 @@ const WeeklySchedule = ({
   useEffect(() => {
     onActiveDayChange(activeDay);
   }, [activeDay, onActiveDayChange]);
+
+  // Effect to handle auth state changes
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchUserSchedules();
+    } else {
+      setSchedules([]);
+      setCurrentScheduleId(null);
+    }
+  }, [isAuthenticated, fetchUserSchedules]);
 
   return (
     <div className={`${theme.card} rounded-lg shadow-lg p-6 mt-8 relative`}>
@@ -211,22 +294,28 @@ const WeeklySchedule = ({
         </div>
       )}
       {isAuthenticated && (
-        <div className="mb-4">
-          <div className="flex items-center gap-2">
-            <input
-              type="text"
-              value={scheduleName}
-              onChange={(e) => setScheduleName(e.target.value)}
-              className={`border rounded p-2 flex-grow ${theme.input}`}
-              placeholder="Schedule Name"
-            />
+        <div className="flex space-x-2 mb-4">
+          <input
+            type="text"
+            value={scheduleName}
+            onChange={(e) => setScheduleName(e.target.value)}
+            className={`border rounded p-2 flex-grow ${theme.input}`}
+            placeholder="Schedule Name"
+          />
+          <button
+            onClick={handleSaveSchedule}
+            className={`${theme.accent} ${theme.text} px-4 py-2 rounded ${theme.hover}`}
+          >
+            Save As New
+          </button>
+          {currentScheduleId && (
             <button
-              onClick={handleSaveSchedule}
+              onClick={handleUpdateSchedule}
               className={`${theme.accent} ${theme.text} px-4 py-2 rounded ${theme.hover}`}
             >
-              Save Schedule
+              Update Current
             </button>
-          </div>
+          )}
         </div>
       )}
 
@@ -234,12 +323,13 @@ const WeeklySchedule = ({
         <div className="mb-4">
           <select
             onChange={(e) => handleLoadSchedule(e.target.value)}
+            value={currentScheduleId || ""}
             className={`border rounded p-2 w-full ${theme.input}`}
           >
             <option value="">Select a schedule to load</option>
             {schedules.map((schedule) => (
               <option key={schedule.id} value={schedule.id}>
-                {schedule.name}
+                {schedule.name} ({new Date(schedule.created_at).toLocaleDateString()})
               </option>
             ))}
           </select>
@@ -262,6 +352,16 @@ const WeeklySchedule = ({
           activeDay={activeDay}
         />
       </div>
+
+      {editingIndex !== null && weekSchedule[activeDay] && weekSchedule[activeDay][editingIndex] && (
+        <EditPopup
+          emoji={weekSchedule[activeDay][editingIndex].emoji}
+          activity={weekSchedule[activeDay][editingIndex].activity}
+          emojiLibrary={emojiLibrary}
+          onSave={handleEditSave}
+          onClose={() => setEditingIndex(null)}
+        />
+      )}
       {isAuthenticated && (
         <div className="mt-4">
           <input

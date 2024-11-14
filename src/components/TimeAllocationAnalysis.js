@@ -1,22 +1,28 @@
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import { useTheme } from '../themes';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
-import html2canvas from 'html2canvas';
 import { COLORS } from '../colors';
 
 const TimeAllocationAnalysis = ({ weekSchedule, activeDay, onShare }) => {
   const { theme } = useTheme();
   const [analysisMode, setAnalysisMode] = useState('week');
-  const chartRef = useRef(null);
 
   const analyzeSchedule = (schedule) => {
+    // Ensure schedule is valid and has items
+    if (!schedule || !Array.isArray(schedule)) {
+      console.log('Invalid schedule:', schedule);
+      return [];
+    }
+
     const analysis = {};
     schedule.forEach(item => {
-      if (analysis[item.activity]) {
-        analysis[item.activity] += 1;
-      } else {
-        analysis[item.activity] = 1;
+      // Skip invalid items
+      if (!item || typeof item !== 'object' || !item.activity) {
+        console.log('Invalid schedule item:', item);
+        return;
       }
+
+      analysis[item.activity] = (analysis[item.activity] || 0) + 1;
     });
 
     return Object.entries(analysis).map(([activity, hours]) => ({
@@ -26,9 +32,38 @@ const TimeAllocationAnalysis = ({ weekSchedule, activeDay, onShare }) => {
     }));
   };
 
-  const data = analysisMode === 'week' 
-    ? analyzeSchedule(Object.values(weekSchedule).flat())
-    : analyzeSchedule(weekSchedule[activeDay]);
+  // Safely get the data for analysis
+  const getData = () => {
+    try {
+      if (analysisMode === 'week') {
+        // Ensure weekSchedule is an object with valid days
+        if (!weekSchedule || typeof weekSchedule !== 'object') {
+          console.log('Invalid week schedule:', weekSchedule);
+          return [];
+        }
+        
+        // Flatten all days into a single array
+        const allDayItems = Object.values(weekSchedule)
+          .filter(day => Array.isArray(day))
+          .flat();
+          
+        return analyzeSchedule(allDayItems);
+      } else {
+        // For daily analysis
+        const daySchedule = weekSchedule[activeDay];
+        if (!Array.isArray(daySchedule)) {
+          console.log('Invalid day schedule:', daySchedule);
+          return [];
+        }
+        return analyzeSchedule(daySchedule);
+      }
+    } catch (error) {
+      console.error('Error analyzing schedule:', error);
+      return [];
+    }
+  };
+
+  const data = getData();
 
   const CustomTooltip = ({ active, payload }) => {
     if (active && payload && payload.length) {
@@ -43,8 +78,16 @@ const TimeAllocationAnalysis = ({ weekSchedule, activeDay, onShare }) => {
     return null;
   };
 
+  // If no data is available, show a message
   if (!data || data.length === 0) {
-    return <div className={`${theme.text}`}>No data available for analysis.</div>;
+    return (
+      <div className={`mt-12 ${theme.card} rounded-lg shadow-lg p-6 max-w-2xl mx-auto`}>
+        <div className="text-center">
+          <h2 className={`text-2xl font-semibold ${theme.text} mb-4`}>Time Allocation Analysis</h2>
+          <p className={theme.text}>No data available for analysis. Please ensure your schedule has activities.</p>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -62,7 +105,8 @@ const TimeAllocationAnalysis = ({ weekSchedule, activeDay, onShare }) => {
           </select>
         </div>
       </div>
-      <div className="flex flex-col" ref={chartRef}>
+
+      <div className="flex flex-col">
         <div className="w-full h-80 mb-8">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
@@ -83,12 +127,18 @@ const TimeAllocationAnalysis = ({ weekSchedule, activeDay, onShare }) => {
             </PieChart>
           </ResponsiveContainer>
         </div>
+
         <div className="w-full mt-4">
           <ul className={`${theme.text} grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4`}>
             {data.map((item, index) => (
               <li key={index} className="flex items-center">
-                <span className="inline-block w-4 h-4 mr-2 flex-shrink-0" style={{ backgroundColor: COLORS[index % COLORS.length] }}></span>
-                <span className="truncate">{item.name}: {item.value}h</span>
+                <span 
+                  className="inline-block w-4 h-4 mr-2 flex-shrink-0" 
+                  style={{ backgroundColor: COLORS[index % COLORS.length] }}
+                />
+                <span className="truncate">
+                  {item.name}: {item.value}h
+                </span>
               </li>
             ))}
           </ul>

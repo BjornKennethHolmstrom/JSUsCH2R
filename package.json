@@ -4,13 +4,9 @@
   "private": true,
   "homepage": "https://bjornkennethholmstrom.github.io/JSUsCH2R",
   "dependencies": {
-    "@testing-library/jest-dom": "^5.17.0",
-    "@testing-library/react": "^13.4.0",
-    "@testing-library/user-event": "^13.5.0",
     "axios": "^1.7.5",
     "bcrypt": "^5.1.1",
     "cors": "^2.8.5",
-    "dotenv": "^16.4.5",
     "html2canvas": "^1.4.1",
     "jsonwebtoken": "^9.0.2",
     "lucide-react": "^0.446.0",
@@ -26,10 +22,16 @@
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
-    "test": "react-scripts test",
     "eject": "react-scripts eject",
     "predeploy": "npm run build",
-    "deploy": "gh-pages -d build"
+    "deploy": "gh-pages -d build",
+    "dev": "concurrently \"npm run start\" \"npm run server:dev\"",
+    "server": "node server/index.js",
+    "server:dev": "nodemon server/index.js",
+    "test": "react-scripts test",
+    "test:server": "NODE_ENV=test jest --config server/jest.config.js",
+    "test:coverage": "react-scripts test --coverage --watchAll=false",
+    "test:all": "npm run test && npm run test:server"
   },
   "proxy": "http://localhost:3001",
   "eslintConfig": {
@@ -50,12 +52,45 @@
       "last 1 safari version"
     ]
   },
+  "jest": {
+    "testEnvironment": "jsdom",
+    "moduleNameMapper": {
+      "^@/components/(.*)$": "<rootDir>/src/components/$1"
+    },
+    "transform": {
+      "^.+\\.(js|jsx)$": "babel-jest"
+    },
+    "collectCoverageFrom": [
+      "src/**/*.{js,jsx}",
+      "!src/index.js",
+      "!src/reportWebVitals.js"
+    ],
+    "transformIgnorePatterns": [
+      "node_modules/(?!(@testing-library)/)"
+    ],
+    "watchPathIgnorePatterns": [
+      "<rootDir>/server/"
+    ]
+  },
   "devDependencies": {
     "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
     "@babel/plugin-transform-private-property-in-object": "^7.24.7",
+    "@jest/globals": "^29.7.0",
+    "@testing-library/jest-dom": "^6.6.2",
+    "@testing-library/react": "^16.0.1",
+    "@testing-library/user-event": "^14.5.2",
     "autoprefixer": "^10.4.20",
+    "concurrently": "^9.0.1",
+    "cross-fetch": "^4.0.0",
+    "dotenv": "^16.4.5",
     "gh-pages": "^6.1.1",
+    "jest": "^27.5.1",
+    "jest-environment-jsdom": "^29.7.0",
+    "msw": "^2.5.1",
+    "nodemon": "^3.1.7",
     "postcss": "^8.4.41",
-    "tailwindcss": "^3.4.10"
+    "supertest": "^7.0.0",
+    "tailwindcss": "^3.4.10",
+    "whatwg-fetch": "^3.6.20"
   }
 }
