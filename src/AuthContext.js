@@ -9,16 +9,22 @@ export const AuthProvider = ({ children }) => {
     token: null,
   });
 
-  useEffect(() => {
+  const initializeFromLocalStorage = () => {
     const token = localStorage.getItem('token');
-    const storedUserId = localStorage.getItem('userId');
-    if (token && storedUserId) {
+    const userId = localStorage.getItem('userId');
+    if (token && userId) {
       setAuthState({
         isAuthenticated: true,
-        userId: storedUserId,
+        userId: userId,
         token: token,
       });
+      return true;
     }
+    return false;
+  };
+
+  useEffect(() => {
+    initializeFromLocalStorage();
   }, []);
 
   const login = (token, userId) => {

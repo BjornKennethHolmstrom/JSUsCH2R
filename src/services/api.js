@@ -84,10 +84,34 @@ export async function register(email, password) {
 }
 
 export async function login(email, password) {
-  return publicRequest('/auth/login', {
-    method: 'POST',
-    body: JSON.stringify({ email, password }),
-  });
+  console.log('API: Initiating login request');
+  try {
+    const response = await fetch(`${API_BASE_URL}/auth/login`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ email, password })
+    });
+
+    console.log('API: Login response status:', response.status);
+    
+    const data = await response.json();
+    console.log('API: Login response data:', data);
+
+    if (!response.ok) {
+      throw new Error(data.error?.message || `Login failed with status ${response.status}`);
+    }
+
+    if (!data.token || !data.userId) {
+      throw new Error('Invalid response format from server');
+    }
+
+    return data;
+  } catch (error) {
+    console.error('API: Login request failed:', error);
+    throw error;
+  }
 }
 
 export async function getUserData() {
@@ -132,9 +156,18 @@ export async function getEmojiLibraries() {
 }
 
 export async function saveEmojiLibrary(libraryData) {
+  console.log('API: Saving emoji library with data:', libraryData);
+  
+  const serializedData = {
+    ...libraryData,
+    emojis: JSON.stringify(libraryData.emojis)
+  };
+
+  console.log('API: Serialized data:', serializedData);
+  
   return request('/emoji-libraries', {
     method: 'POST',
-    body: JSON.stringify(libraryData),
+    body: JSON.stringify(serializedData)
   });
 }
 

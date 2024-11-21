@@ -32,48 +32,57 @@ const Auth = ({ onClose }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setIsLoading(true);
     
     if (!validateInput()) {
+      setIsLoading(false);
       return;
     }
 
-    setIsLoading(true);
-    
     try {
+      console.log('Attempting login with:', { email }); // Don't log password
       let userData;
+      
       if (isLogin) {
         userData = await login(email, password);
-      } else {
-        await register(email, password);
-        userData = await login(email, password);
-      }
+        console.log('Login response:', userData);
+        
+        if (!userData || !userData.token) {
+          throw new Error('Invalid response from server - missing token');
+        }
 
-      if (userData && userData.token) {
-        // Store auth data
+        // First store the auth data
         localStorage.setItem('token', userData.token);
         localStorage.setItem('userId', userData.userId);
         
-        // Initialize auth context
+        // Then initialize auth context
+        console.log('Initializing auth context with:', userData);
         authLogin(userData.token, userData.userId);
 
-        // Attempt to migrate local data
-        const localData = await getFromIndexedDB();
-        if (localData) {
-          try {
-            // Handle data migration here if needed
-            console.log('Local data available for migration');
-          } catch (migrationError) {
-            console.error('Error migrating local data:', migrationError);
-          }
-        }
+        // Wait a moment to ensure state updates
+        await new Promise(resolve => setTimeout(resolve, 100));
 
+        // Only then close the modal
         onClose();
+
+        // Force a page reload to ensure all components pick up the new auth state
+        window.location.reload();
       } else {
-        setError('Authentication failed. Please try again.');
+        await register(email, password);
+        console.log('Registration successful, attempting login');
+        userData = await login(email, password);
+        
+        // Same process as above
+        localStorage.setItem('token', userData.token);
+        localStorage.setItem('userId', userData.userId);
+        authLogin(userData.token, userData.userId);
+        await new Promise(resolve => setTimeout(resolve, 100));
+        onClose();
+        window.location.reload();
       }
     } catch (err) {
-      console.error('Auth error:', err);
-      setError(err.message || 'An unexpected error occurred. Please try again.');
+      console.error('Authentication error:', err);
+      setError(err.message || 'Authentication failed. Please try again.');
     } finally {
       setIsLoading(false);
     }

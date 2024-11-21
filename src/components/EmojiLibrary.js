@@ -123,14 +123,47 @@ const EmojiLibrary = ({
     fetchUserLibraries();
   }, [fetchUserLibraries]);
 
+  const handleLoadLibrary = (libraryData) => {
+    try {
+      // If emojis is a string, parse it, otherwise use it as is
+      const emojisData = typeof libraryData.emojis === 'string' 
+        ? JSON.parse(libraryData.emojis) 
+        : libraryData.emojis;
+
+      // Update library with loaded data
+      onUpdateEmoji(emojisData);
+      setLibraryName(libraryData.name);
+      setVisibility(libraryData.visibility || 'private');
+      setSharedWith(libraryData.shared_with || []);
+      
+      showNotification('Library loaded successfully');
+    } catch (error) {
+      console.error('Error loading library:', error);
+      showNotification('Failed to load library: ' + error.message, 'error');
+    }
+  };
+
   const handleSaveLibrary = async () => {
     try {
-      await saveEmojiLibrary(libraryName, emojiLibrary, visibility, sharedWith);
+      console.log('Attempting to save emoji library:', {
+        name: libraryName,
+        emojis: emojiLibrary,
+        visibility,
+        sharedWith
+      });
+
+      await saveEmojiLibrary({
+        name: libraryName,
+        emojis: emojiLibrary,
+        visibility: visibility || 'private',
+        shared_with: sharedWith || []
+      });
+      
       fetchUserLibraries();
       showNotification('Emoji library saved successfully');
     } catch (error) {
       console.error('Error saving emoji library:', error);
-      showNotification('Failed to save emoji library', 'error');
+      showNotification(`Failed to save emoji library: ${error.message}`, 'error');
     }
   };
 
@@ -237,7 +270,7 @@ const EmojiLibrary = ({
               <li key={lib.id} className="flex justify-between items-center">
                 <span className={theme.text}>{lib.name}</span>
                 <button
-                  onClick={() => onUpdateEmoji(JSON.parse(lib.emojis))}
+                  onClick={() => handleLoadLibrary(lib)}
                   className={`${theme.accent} ${theme.text} px-2 py-1 rounded ${theme.hover} text-sm`}
                 >
                   Load

@@ -110,6 +110,85 @@ For deployment to GitHub Pages:
 npm run deploy
 ```
 
+## File and folder tree
+JSUsCH2R
+├── CHANGELOG.md
+├── jest.config.js
+├── LICENSE.md
+├── package.json
+├── package-lock.json
+├── postcss.config.js
+├── public
+│   ├── 404.html
+│   ├── favicon.ico
+│   ├── index.html
+│   ├── logo180.png
+│   ├── logo192.png
+│   ├── logo512.png
+│   ├── manifest.json
+│   ├── robots.txt
+│   └── service-worker.js
+├── README.md
+├── server
+│   ├── app.js
+│   ├── config
+│   │   └── db.js
+│   ├── index.js
+│   ├── jest.config.js
+│   ├── middleware
+│   │   └── auth.js
+│   ├── routes
+│   │   ├── admin.js
+│   │   ├── auth.js
+│   │   ├── emoji.js
+│   │   ├── schedules.js
+│   │   └── user.js
+│   ├── setupTests.js
+│   └── utils
+│       ├── db-tools.js
+│       └── helpers.js
+├── src
+│   ├── App.css
+│   ├── App.js
+│   ├── App.test.js
+│   ├── AuthContext.js
+│   ├── AuthContext.test.js
+│   ├── colors.js
+│   ├── components
+│   │   ├── Auth.js
+│   │   ├── Auth.test.js
+│   │   ├── ConfirmDialog.js
+│   │   ├── EditPopup.js
+│   │   ├── EmojiLibraryHelpModal.js
+│   │   ├── EmojiLibrary.js
+│   │   ├── HelpModal.js
+│   │   ├── HelpModalSharing.js
+│   │   ├── JSUsCH2R.js
+│   │   ├── Notification.js
+│   │   ├── ScheduleLibrarySharing.js
+│   │   ├── ShareModal.js
+│   │   ├── ThemeSelector.js
+│   │   ├── TimeAllocationAnalysis.js
+│   │   └── WeeklySchedule.js
+│   ├── index.css
+│   ├── index.js
+│   ├── logo.svg
+│   ├── mocks
+│   │   ├── handlers.js
+│   │   └── server.js
+│   ├── reportWebVitals.js
+│   ├── scheduleStats.js
+│   ├── services
+│   │   ├── api.js
+│   │   └── api.test.js
+│   ├── setupTests.js
+│   ├── themes.js
+│   └── utils
+│       ├── idGenerator.js
+│       ├── indexedDB.js
+│       └── scheduleStats.js
+└── tailwind.config.js
+
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.

@@ -42,17 +42,16 @@ router.post('/register', async (req, res, next) => {
 });
 
 router.post('/login', async (req, res, next) => {
-  console.log('Login attempt:', {
-    body: req.body,
+  console.log('Server: Login attempt received', {
+    email: req.body.email,
     headers: req.headers
   });
 
   try {
     const { email, password } = req.body;
     
-    // Validate input
     if (!email || !password) {
-      console.log('Missing email or password');
+      console.log('Server: Missing email or password');
       return res.status(400).json({ 
         error: { 
           message: 'Email and password are required',
@@ -61,17 +60,16 @@ router.post('/login', async (req, res, next) => {
       });
     }
     
-    // Log DB query
-    console.log('Querying database for user:', email);
+    console.log('Server: Querying database for user');
     const result = await pool.query(
       'SELECT * FROM users WHERE email = $1', 
       [email]
     );
     
-    console.log('DB query result rows:', result.rows.length);
+    console.log('Server: Database query complete, rows found:', result.rows.length);
     
     if (result.rows.length === 0) {
-      console.log('User not found');
+      console.log('Server: User not found');
       return res.status(401).json({ 
         error: { 
           message: 'Invalid email or password',
@@ -81,11 +79,11 @@ router.post('/login', async (req, res, next) => {
     }
 
     const user = result.rows[0];
-    console.log('Comparing passwords');
+    console.log('Server: Comparing passwords');
     const passwordMatch = await bcrypt.compare(password, user.password_hash);
     
     if (!passwordMatch) {
-      console.log('Password mismatch');
+      console.log('Server: Password mismatch');
       return res.status(401).json({ 
         error: { 
           message: 'Invalid email or password',
@@ -94,21 +92,21 @@ router.post('/login', async (req, res, next) => {
       });
     }
 
-    console.log('Creating JWT token');
+    console.log('Server: Creating JWT token');
     const token = jwt.sign(
       { id: user.id, email: user.email }, 
       process.env.JWT_SECRET,
       { expiresIn: '24h' }
     );
 
-    console.log('Login successful');
+    console.log('Server: Login successful, sending response');
     res.json({ 
       token,
       userId: user.id,
       email: user.email
     });
   } catch (error) {
-    console.error('Login error:', error);
+    console.error('Server: Login error:', error);
     next(error);
   }
 });

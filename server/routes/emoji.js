@@ -46,17 +46,70 @@ router.get('/', authenticateToken, async (req, res) => {
 });
 
 router.post('/', authenticateToken, async (req, res) => {
+  console.log('Server: Received emoji library save request:', req.body);
+  
+  const client = await pool.connect();
+  
   try {
-    const { name, emojis, visibility, sharedWith } = req.body;
+    const { name, emojis, visibility, shared_with } = req.body;
+
+    // Validate required fields
+    if (!name) {
+      return res.status(400).json({ 
+        error: { message: 'Library name is required' }
+      });
+    }
+
+    if (!emojis) {
+      return res.status(400).json({ 
+        error: { message: 'Emoji data is required' }
+      });
+    }
+
+    // Parse emojis if it's a string
+    const parsedEmojis = typeof emojis === 'string' ? JSON.parse(emojis) : emojis;
+    
+    // Generate unique ID
     const uniqueId = generateUniqueId();
-    const result = await pool.query(
-      'INSERT INTO emoji_libraries (user_id, name, emojis, visibility, shared_with, unique_id) VALUES ($1, $2, $3, $4, $5, $6) ON CONFLICT (user_id, name) DO UPDATE SET emojis = $3, visibility = $4, shared_with = $5 RETURNING *',
-      [req.user.id, name, JSON.stringify(emojis), visibility, sharedWith, uniqueId]
+    
+    await client.query('BEGIN');
+
+    const result = await client.query(
+      `INSERT INTO emoji_libraries 
+       (user_id, name, emojis, visibility, shared_with, unique_id) 
+       VALUES ($1, $2, $3, $4, $5, $6)
+       ON CONFLICT ON CONSTRAINT unique_user_library 
+       DO UPDATE SET
+         emojis = EXCLUDED.emojis,
+         visibility = EXCLUDED.visibility,
+         shared_with = EXCLUDED.shared_with,
+         updated_at = CURRENT_TIMESTAMP
+       RETURNING *`,
+      [
+        req.user.id,
+        name,
+        JSON.stringify(parsedEmojis),
+        visibility || 'private',
+        shared_with || [],
+        uniqueId
+      ]
     );
+
+    await client.query('COMMIT');
+    
+    console.log('Server: Save successful, returning:', result.rows[0]);
     res.json(result.rows[0]);
   } catch (error) {
-    console.error('Error saving emoji library:', error);
-    res.status(500).json({ error: 'An error occurred while saving the emoji library' });
+    await client.query('ROLLBACK');
+    console.error('Server: Error saving emoji library:', error);
+    res.status(500).json({ 
+      error: { 
+        message: 'Error saving emoji library',
+        details: error.message
+      }
+    });
+  } finally {
+    client.release();
   }
 });
 
